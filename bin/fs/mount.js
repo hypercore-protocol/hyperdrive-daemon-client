@@ -27,26 +27,31 @@ exports.handler = function (argv) {
   loadMetadata((err, metadata) => {
     if (err) return onerror(err)
     const client = new HyperdriveClient(metadata.endpoint, metadata.token)
-    client.ready(onready)
+    client.ready(err => {
+      if (err) return onerror(err)
+      return onclient(client)
+    })
   })
 
-  function onready (err) {
-    if (err) return onerror(err)
-    client.fuse.mount(argv.mnt, {
+  function onclient (client) {
+    client.fuse.mount(p.resolve(argv.mnt), {
       sparse: argv.sparse,
       sparseMetadata: argv.sparseMetadata,
       seed: argv.seed
-    }, (err, { mnt, mountInfo }) => {
+    }, (err, { path, mountInfo }) => {
       if (err) return onerror(err)
-      return onsuccess(mnt, mountInfo)
+      return onsuccess(path, mountInfo.key)
     })
   }
 
   function onerror (err) {
-    console.error(chalk.red(`Could not mount the root Hyperdrive: ${err}`))
+    console.error(chalk.red('Could not mount the root Hyperdrive.'))
+    console.error(chalk.red(`${err.details}`))
   }
 
-  function onsuccess (mnt, mountInfo) {
-    console.log(chalk.green(`Mounted root hyperdrive with key ${mountInfo.key.toString('hex')} at ${mnt}`))
+  function onsuccess (mnt, key) {
+    console.log(chalk.green('Mounted root hyperdrive:'))
+    console.log(chalk.green(`  Key:        ${key.toString('hex')} `))
+    console.log(chalk.green(`  Mountpoint: ${mnt} `))
   }
 }

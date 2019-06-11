@@ -3,6 +3,7 @@ const thunky = require('thunky')
 
 const rpc = require('./lib/rpc.js')
 const { loadMetadata } = require('./lib/metadata')
+const { toHyperdriveOptions, fromHyperdriveOptions } = require('./lib/common')
 
 class MainClient {
   constructor (endpoint, token) {
@@ -36,7 +37,7 @@ class MainClient {
       self.drive = new DriveClient(self.endpoint, self.token)
       self._client = new rpc.main.services.HyperdriveClient(self.endpoint, grpc.credentials.createInsecure())
       // TODO: Determine how long to wait for connection.
-      self._client.waitForReady(200, err => {
+      self._client.waitForReady(Date.now() + 200, err => {
         if (err) {
           err.disconnected = true
           return cb(err)
@@ -79,13 +80,15 @@ class FuseClient {
 
   mount (mnt, opts, cb) {
     const req = new rpc.fuse.messages.MountRequest()
-    req.path = mnt
-    req.opts = opts
+
+    req.setPath(mnt)
+    req.setOpts(toHyperdriveOptions(opts))
+
     this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
       if (err) return cb(err)
       return cb(null, {
-        path: rsp.path,
-        mountInfo: rsp.mountInfo
+        path: rsp.getPath(),
+        mountInfo: fromHyperdriveOptions(rsp.getMountinfo())
       })
     })
   }
@@ -117,7 +120,7 @@ class HypercoreClient {
 function toMetadata (obj) {
   const metadata = new grpc.Metadata()
   for (let key of Object.getOwnPropertyNames(obj)) {
-    metadata.set(key, obj[name])
+    metadata.set(key, obj[key])
   }
   return metadata
 }
@@ -125,5 +128,5 @@ function toMetadata (obj) {
 module.exports = {
   HyperdriveClient: MainClient,
   rpc,
-  loadMetadata
+  loadMetadata,
 }
