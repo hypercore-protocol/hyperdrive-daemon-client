@@ -36,9 +36,9 @@ exports.handler = function (argv) {
       sparse: argv.sparse,
       sparseMetadata: argv.sparseMetadata,
       seed: argv.seed
-    }, (err, { path, mountInfo }) => {
+    }, (err, rsp) => {
       if (err) return onerror(err)
-      return onsuccess(path, mountInfo.key)
+      return onsuccess(rsp.path, rsp.mountInfo.key)
     })
   }
 
