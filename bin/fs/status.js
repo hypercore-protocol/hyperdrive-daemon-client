@@ -18,7 +18,7 @@ exports.handler = async function (argv) {
   }
 
   function onerror (err) {
-    console.error(chalk.red('Could not get FUSE status: ${err.details}'))
+    console.error(chalk.red(`Could not get FUSE status: ${err.details}`))
   }
 
   function onsuccess (available, configured) {
