@@ -58,11 +58,11 @@ class MainClient {
     })
   }
 
-  stop () {
+  stop (cb) {
     this.ready(err => {
       if (err) return cb(err)
       const req = new rpc.main.messages.StopRequest()
-      this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
+      this._client.stop(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return cb(err)
         // TODO: Response processing?
         return cb(null, rsp)
@@ -93,12 +93,23 @@ class FuseClient {
     })
   }
 
-  unmount () {
+  unmount (cb) {
     const req = new rpc.fuse.messages.UnmountRequest()
     this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
       if (err) return cb(err)
       // TODO: Response processing?
       return cb(null)
+    })
+  }
+
+  status (cb) {
+    const req = new rpc.fuse.messages.FuseStatusRequest()
+    this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null, {
+        available: rsp.getAvailable(),
+        configured: rsp.getConfigured()
+      })
     })
   }
 }

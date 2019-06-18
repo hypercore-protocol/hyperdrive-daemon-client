@@ -1,31 +1,31 @@
-const p = require('path')
 const chalk = require('chalk')
 
-const { loadMetadata } = require('../../lib/metadata')
+const loadClient = require('../../lib/loader')
 
-exports.command = 'unmount <mnt>'
-exports.desc = 'Unmount the hyperdrive that was mounted at the specified mountpoint.'
-exports.handler = async function (argv) {
-  try {
-    let metadata = await loadMetadata()
-    let body = {
-      mnt: p.resolve(argv.mnt)
-    }
-    let rsp = await request(`${metadata.endpoint}/unmount`, {
-      method: 'POST',
-      json: true,
-      auth: {
-        bearer: metadata.token
-      },
-      body,
-      resolveWithFullResponse: true
+exports.command = 'unmount'
+exports.desc = 'Unmount the root drive.'
+exports.builder = {}
+
+exports.handler = function (argv) {
+  loadClient((err, client) => {
+    if (err) return onerror(err)
+    return onclient(client)
+  })
+
+  function onclient (client) {
+    client.fuse.unmount(err => {
+      if (err) return onerror(err)
+      return onsuccess()
     })
-    if (rsp.statusCode === 200) {
-      console.log(chalk.green(`Unmounted hyperdrive at ${argv.mnt}`))
-    } else {
-      console.error(chalk.red(`Could not unmount hyperdrive: ${rsp.body}`))
-    }
-  } catch (err) {
-    console.error(chalk.red(`Could not unmount hyperdrive: ${err}`))
+  }
+
+  function onerror (err) {
+    console.error(chalk.red('Could not unmount the root drive:'))
+    console.error()
+    console.error(chalk.red(`${err.details}`))
+  }
+
+  function onsuccess (mnt, key) {
+    console.log(chalk.green('Successfully unmounted the root drive.'))
   }
 }

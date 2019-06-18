@@ -30,7 +30,7 @@
     "fs-extra": "^8.0.1",
     "google-protobuf": "^3.8.0",
     "grpc": "^1.21.1",
-    "hyperdrive-schemas": "^1.0.0",
+    "hyperdrive-schemas": "^0.9.0",
     "thunky": "^1.0.3",
     "yargs": "^13.2.4"
   },

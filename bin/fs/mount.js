@@ -1,11 +1,12 @@
 const p = require('path')
 const chalk = require('chalk')
 
-const { HyperdriveClient } = require('../..')
-const { loadMetadata } = require('../../lib/metadata')
+const loadClient = require('../../lib/loader')
 
-exports.command = 'mount <mnt>'
-exports.desc = 'Mount the root Hyperdrive the specified mountpoint.'
+const ROOT_DRIVE_PATH = p.resolve('/hyperdrive')
+
+exports.command = 'mount [mnt]'
+exports.desc = 'Mount a Hyperdrive the specified mountpoint, or /hyperdrive if this is the root drive.'
 exports.builder = {
   sparse: {
     description: 'Create sparse content feeds.',
@@ -18,23 +19,20 @@ exports.builder = {
     default: true
   },
   seed: {
-    description: 'Make the private hyperdrive available to the network',
+    description: 'Make the drive available to the network',
     type: 'boolean',
     default: false
   }
 }
 exports.handler = function (argv) {
-  loadMetadata((err, metadata) => {
+  loadClient((err, client) => {
     if (err) return onerror(err)
-    const client = new HyperdriveClient(metadata.endpoint, metadata.token)
-    client.ready(err => {
-      if (err) return onerror(err)
-      return onclient(client)
-    })
+    return onclient(client)
   })
 
   function onclient (client) {
-    client.fuse.mount(p.resolve(argv.mnt), {
+    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : ROOT_DRIVE_PATH
+    client.fuse.mount(mnt, {
       sparse: argv.sparse,
       sparseMetadata: argv.sparseMetadata,
       seed: argv.seed
@@ -45,12 +43,13 @@ exports.handler = function (argv) {
   }
 
   function onerror (err) {
-    console.error(chalk.red('Could not mount the root Hyperdrive.'))
+    console.error(chalk.red('Could not mount the drive:'))
     console.error(chalk.red(`${err.details}`))
   }
 
   function onsuccess (mnt, key) {
-    console.log(chalk.green('Mounted root hyperdrive:'))
+    console.log(chalk.green('Mounted a drive:'))
+    console.log()
     console.log(chalk.green(`  Key:        ${key.toString('hex')} `))
     console.log(chalk.green(`  Mountpoint: ${mnt} `))
   }

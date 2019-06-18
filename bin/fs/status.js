@@ -1,19 +1,30 @@
 const chalk = require('chalk')
 
-const getClients = require('../../lib/client')
-const { loadMetadata } = require('../../lib/metadata')
+const loadClient = require('../../lib/loader')
 
 exports.command = 'status'
 exports.desc = 'Check FUSE status'
 exports.handler = async function (argv) {
-  try {
-    var { clients, metadata } = await getClients()
-  } catch (err) {
-    console.log('err:', err)
-    return console.error(chalk.red('The daemon is not running. Start it first with \`hyperdrive start\`.'))
+  loadClient((err, client) => {
+    if (err) return onerror(err)
+    return onclient(client)
+  })
+
+  function onclient (client) {
+    client.fuse.status((err, { available, configured }) => {
+      if (err) return onerror(err)
+      return onsuccess(available, configured)
+    })
   }
 
-  clients.fuse.status(null, { token: metadata.token }, (err, rsp) => {
-    console.log('ERR:', err, 'RSP:', rsp)
-  })
+  function onerror (err) {
+    console.error(chalk.red('Could not get FUSE status: ${err.details}'))
+  }
+
+  function onsuccess (available, configured) {
+    console.log(chalk.green('FUSE Status:'))
+    console.log()
+    console.log(chalk.green(`  Available: ${available}`))
+    console.log(chalk.green(`  Configured: ${configured}`))
+  }
 }

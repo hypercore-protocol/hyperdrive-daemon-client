@@ -1,25 +1,24 @@
-const request = require('request-promise-native')
 const chalk = require('chalk')
 
-const { loadMetadata } = require('../lib/metadata')
+const loadClient = require('../lib/loader')
 
 exports.command = 'status'
-exports.desc = 'Get information about the hypermount daemon.'
+exports.desc = 'Check the status of the Hyperdrive daemon.'
 exports.handler = async function (argv) {
-  try {
-    let metadata = await loadMetadata()
-    let rsp = await request.get(new URL('/status', metadata.endpoint).toString(), {
-      auth: {
-        bearer: metadata.token
-      },
-      resolveWithFullResponse: true
+  loadClient((err, client) => {
+    if (err) return onerror(err)
+    client.status(err => {
+      if (err) return onerror(err)
+      return onsuccess()
     })
-    if (rsp.statusCode === 200) {
-      console.log(chalk.green('The daemon is up and running!'))
-    } else {
-      console.log(chalk.orange('Cannot get the deamon\'s status. Did you start it?'))
-    }
-  } catch (err) {
-    console.error(chalk.red(`Could not get server status: ${err}`))
+  })
+
+  function onerror (err) {
+    if (err.disconnected) return console.error(chalk.red('The Hyperdrive daemon is not running.'))
+    console.error(chalk.red(`Could not get the daemon status: ${err.details}`))
+  }
+
+  function onsuccess () {
+    console.log(chalk.green(`The Hyperdrive daemon is running.`))
   }
 }
