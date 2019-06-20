@@ -1,22 +1,23 @@
 const p = require('path')
 const chalk = require('chalk')
+const datEncoding = require('dat-encoding')
 
 const loadClient = require('../../lib/loader')
 
 const ROOT_DRIVE_PATH = p.resolve('/hyperdrive')
 
-exports.command = 'mount [mnt]'
+exports.command = 'mount [mnt] [key]'
 exports.desc = 'Mount a Hyperdrive the specified mountpoint, or /hyperdrive if this is the root drive.'
 exports.builder = {
-  sparse: {
-    description: 'Create sparse content feeds.',
-    type: 'boolean',
-    default: true
+  version: {
+    description: 'The version of the drive that will be mounted.',
+    type: 'number',
+    default: null
   },
-  sparseMetadata: {
-    description: 'Create a sparse metadata feed.',
-    type: 'boolean',
-    default: true
+  hash: {
+    description: 'The root hash of the drive that will be mounted.',
+    type: 'string',
+    default: null
   },
   seed: {
     description: 'Make the drive available to the network',
@@ -33,12 +34,13 @@ exports.handler = function (argv) {
   function onclient (client) {
     const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : ROOT_DRIVE_PATH
     client.fuse.mount(mnt, {
-      sparse: argv.sparse,
-      sparseMetadata: argv.sparseMetadata,
+      key: argv.key ? datEncoding.decode(argv.key) : null,
+      version: argv.version,
+      hash: argv.hash,
       seed: argv.seed
     }, (err, rsp) => {
       if (err) return onerror(err)
-      return onsuccess(rsp.path, rsp.mountInfo.key)
+      return onsuccess(rsp.path, rsp.mountInfo)
     })
   }
 
@@ -47,10 +49,16 @@ exports.handler = function (argv) {
     console.error(chalk.red(`${err.details}`))
   }
 
-  function onsuccess (mnt, key) {
-    console.log(chalk.green('Mounted a drive:'))
+  function onsuccess (mnt, opts) {
+    console.log(chalk.green('Mounted a drive with the following info:'))
     console.log()
-    console.log(chalk.green(`  Key:        ${key.toString('hex')} `))
     console.log(chalk.green(`  Mountpoint: ${mnt} `))
+    console.log(chalk.green(`  Key:        ${opts.key.toString('hex')} `))
+    if (opts.version) console.log(chalk.green(`  Version:    ${opts.version}`))
+    if (opts.hash) console.log(chalk.green(`  Hash:       ${opts.hash}`))
+    console.log(chalk.green(`  Seeding:    ${opts.seed}`))
+    console.log()
+    const mntString = mnt === '/hyperdrive --root true' ? '' : mnt
+    console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive fs publish ${mntString}\` `))
   }
 }

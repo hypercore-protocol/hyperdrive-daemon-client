@@ -35,6 +35,8 @@ class MainClient {
     function onmetadata () {
       self.fuse = new FuseClient(self.endpoint, self.token)
       self.drive = new DriveClient(self.endpoint, self.token)
+      self.corestore = new CorestoreClient(self.endpoint, self.token)
+
       self._client = new rpc.main.services.HyperdriveClient(self.endpoint, grpc.credentials.createInsecure())
       // TODO: Determine how long to wait for connection.
       self._client.waitForReady(Date.now() + 200, err => {
@@ -62,6 +64,8 @@ class MainClient {
     this.ready(err => {
       if (err) return cb(err)
       const req = new rpc.main.messages.StopRequest()
+
+
       this._client.stop(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return cb(err)
         // TODO: Response processing?
@@ -93,6 +97,28 @@ class FuseClient {
     })
   }
 
+  publish (mnt, cb) {
+    const req = new rpc.fuse.messages.PublishRequest()
+
+    req.setPath(mnt)
+
+    this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
+    })
+  }
+
+  unpublish (mnt, cb) {
+    const req = new rpc.fuse.messages.UnpublishRequest()
+
+    req.setPath(mnt)
+
+    this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
+    })
+  }
+
   unmount (cb) {
     const req = new rpc.fuse.messages.UnmountRequest()
     this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
@@ -121,11 +147,41 @@ class DriveClient {
     this.token = token
     this._client = new rpc.drive.services.DriveClient(this.endpoint, grpc.credentials.createInsecure())
   }
+
+  get (opts, cb) {
+    const req = new rpc.drive.messages.GetDriveRequest()
+
+    req.setOpts(toHyperdriveOptions(opts))
+
+    this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null, {
+        opts: fromHyperdriveOptions(rsp.getOpts())
+      })
+    })
+  }
+
+  update (opts, cb) {
+    const req = new rpc.drive.messages.UpdateDriveRequest()
+
+    req.setOpts(toHyperdriveOptions(opts))
+
+    this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null, {
+        opts: fromHyperdriveOptions(rsp.getOpts())
+      })
+    })
+  }
 }
 
 // TODO: implement
-class HypercoreClient {
-
+class CorestoreClient {
+  constructor (endpoint, token) {
+    this.endpoint = endpoint
+    this.token = token
+    this._client = new rpc.corestore.services.CorestoreClient(this.endpoint, grpc.credentials.createInsecure())
+  }
 }
 
 function toMetadata (obj) {
