@@ -3,7 +3,12 @@ const thunky = require('thunky')
 
 const rpc = require('./lib/rpc.js')
 const { loadMetadata } = require('./lib/metadata')
-const { toHyperdriveOptions, fromHyperdriveOptions } = require('./lib/common')
+const {
+  toHyperdriveOptions,
+  fromHyperdriveOptions,
+  toStat,
+  fromStat
+} = require('./lib/common')
 
 class MainClient {
   constructor (endpoint, token) {
@@ -121,6 +126,7 @@ class FuseClient {
 
   unmount (cb) {
     const req = new rpc.fuse.messages.UnmountRequest()
+
     this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
       if (err) return cb(err)
       // TODO: Response processing?
@@ -149,6 +155,7 @@ class DriveClient {
   }
 
   get (opts, cb) {
+    if (typeof opts === 'function') return this.get(null, opts)
     const req = new rpc.drive.messages.GetDriveRequest()
 
     req.setOpts(toHyperdriveOptions(opts))
@@ -156,21 +163,87 @@ class DriveClient {
     this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
       if (err) return cb(err)
       return cb(null, {
-        opts: fromHyperdriveOptions(rsp.getOpts())
+        opts: fromHyperdriveOptions(rsp.getOpts()),
+        id: rsp.getId()
       })
     })
   }
 
-  update (opts, cb) {
-    const req = new rpc.drive.messages.UpdateDriveRequest()
+  readFile (id, path, cb) {
+    const req = new rpc.drive.messages.ReadFileRequest()
 
-    req.setOpts(toHyperdriveOptions(opts))
+    req.setId(id)
+    req.setPath(path)
 
-    this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
+    this._client.readFile(req, toMetadata({ token: this.token }), (err, rsp) => {
       if (err) return cb(err)
-      return cb(null, {
-        opts: fromHyperdriveOptions(rsp.getOpts())
-      })
+      return cb(null, Buffer.from(rsp.getContent()))
+    })
+  }
+
+  writeFile (id, path, content, cb) {
+    const req = new rpc.drive.messages.WriteFileRequest()
+    if (!(content instanceof Buffer)) content = Buffer.from(content)
+
+    req.setId(id)
+    req.setPath(path)
+    req.setContent(content)
+
+    this._client.writeFile(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
+    })
+  }
+
+  stat (id, path, opts, cb) {
+    if (typeof opts === 'function') return this.stat(id, path, {}, opts)
+    const req = new rpc.drive.messages.StatRequest()
+
+    req.setId(id)
+    req.setPath(path)
+    if (opts.lstat) req.setLstat(opts.lstat)
+
+    this._client.stat(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null, fromStat(rsp.getStat()))
+    })
+  }
+
+  readdir (id, path, opts, cb) {
+    if (typeof opts === 'function') return this.readdir(id, path, {}, opts)
+    const req = new rpc.drive.messages.ReadDirectoryRequest()
+    path = path || '/'
+
+    req.setId(id)
+    req.setPath(path)
+    if (opts.recursive) req.setRecursive(opts.recursive)
+
+    this._client.readdir(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null, rsp.getFilesList())
+    })
+  }
+
+  watch (id, path, cb) {
+
+  }
+
+  listen (id, watcher, cb) {
+
+  }
+
+  unwatch (id, watcher, cb) {
+
+  }
+
+  closeSession (id, cb) {
+    const req = new rpc.drive.messages.CloseSessionRequest()
+
+    req.setId(id)
+
+    this._client.closeSession(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
     })
   }
 }
