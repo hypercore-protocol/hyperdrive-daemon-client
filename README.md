@@ -41,23 +41,22 @@ Returns:
    - `key`: The Hyperdrive key
    - `version`: The Hyperdrive version
    
-##### `await client.drive.close(id)`
+##### `await client.drive.close(sessionId)`
 Close a session that was previously opened with `get`.
 
-##### `await client.drive.publish(id)`
+##### `await client.drive.publish(sessionId)`
 Advertise a drive (corresponding to a session) on the network.
 
-#### `await client.drive.unpublish(id)`
+#### `await client.drive.unpublish(sessionId)`
 Stop advertising a drive (corresponding to a session) on the network.
 
 #### Drive-specific Operations
 The client currently only supports a subset of the Hyperdrive API. We're actively working on extending this (with the end-goal being complete parity)! Method arguments take the same form as those in Hyperdrive. The following methods are supported now:
-
-##### `await client.drive.writeFile(sessionId, path, content)`
-##### `await client.drive.readFile(sessionId, path)`
-##### `await client.drive.mount(sessionId, path, mountOpts)`
-##### `await client.drive.readdir(sessionId, dirName, readdirOpts)`
-##### `await client.drive.stat(sessionId, path)`
+1. `await client.drive.writeFile(sessionId, path, content)`
+2. `const contents = await client.drive.readFile(sessionId, path)`
+3. `const mountInfo = await client.drive.mount(sessionId, path, mountOpts)`
+4. `const fileList = await client.drive.readdir(sessionId, dirName, readdirOpts)`
+5. `const stat = await client.drive.stat(sessionId, path)`
 
 ### FUSE
 
