@@ -33,7 +33,7 @@ Creates a Hyperdrive using the provided drive options (if one has not previously
 Options can include:
 - `key`: The key of an existing Hyperdrive
 - `version`: The version of the drive (this will create a checkout).
-- `hash`: A root tree hash that will be used for validation (_Note: Currently not implemented_).
+- `hash`: A root tree hash that will be used for validation (_Note: currently unimplemented_).
 
 Returns:
 - `id`: A session ID that can be used in subsequent drive-specific commands.
