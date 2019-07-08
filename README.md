@@ -5,7 +5,7 @@ A Node client library and CLI tool for interacting with the Hyperdrive daemon.
 `npm i hyperdrive-daemon-client --save`
 
 ## Usage
-This module provides both programmatic and CLI access to the [Hyperdrive daemon](https://github.com/andrewosh/hyperdrive-daemon]. For info about how to use the CLI, take a look at README in the daemon repo.
+This module provides both programmatic and CLI access to the [Hyperdrive daemon](https://github.com/andrewosh/hyperdrive-daemon). For info about how to use the CLI, take a look at README in the daemon repo.
 
 Each client requires a gRPC endpoint and an access token as constructor arguments:
 ```js
