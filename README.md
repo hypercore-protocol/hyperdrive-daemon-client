@@ -20,17 +20,46 @@ All Hyperdrive API methods are accessed through `client.drive`, and all FUSE met
 ## API
 The client exposes a gRPC interface for a) creating and interacting with remote Hyperdrives and b) mounting Hyperdrives as local directories using FUSE.
 
+Check out the [daemon tests](https://github.com/andrewosh/hyperdrive-daemon/blob/hyperdrive-api/test/hyperdrive.js) for more example usage.
+
 ### Hyperdrive
 The client's Hyperdrive API is designed to mirror the methods in Hyperdrive as closely as possible. 
 
 #### Session Operations
 
-##### `test`
-Blah
+##### `const { info, id } = await client.drive.get(opts)`
+Creates a Hyperdrive using the provided drive options (if one has not previously been created), then opens a session for that drive.
+
+Options can include:
+- `key`: The key of an existing Hyperdrive
+- `version`: The version of the drive (this will create a checkout).
+- `hash`: A root tree hash that will be used for validation (_Note: Currently not implemented_).
+
+Returns:
+- `id`: A session ID that can be used in subsequent drive-specific commands.
+- `info`: Drive info that can include:
+   - `key`: The Hyperdrive key
+   - `version`: The Hyperdrive version
+   
+##### `await client.drive.close(id)`
+Close a session that was previously opened with `get`.
+
+##### `await client.drive.publish(id)`
+Advertise a drive (corresponding to a session) on the network.
+
+#### `await client.drive.unpublish(id)`
+Stop advertising a drive (corresponding to a session) on the network.
 
 #### Drive-specific Operations
+The client currently only supports a subset of the Hyperdrive API. We're actively working on extending this (with the end-goal being complete parity)! Method arguments take the same form as those in Hyperdrive. The following methods are supported now:
 
-Check out the [daemon tests](https://github.com/andrewosh/hyperdrive-daemon/blob/hyperdrive-api/test/hyperdrive.js) for more example usage.
+##### `await client.drive.writeFile(sessionId, path, content)`
+##### `await client.drive.readFile(sessionId, path)`
+##### `await client.drive.mount(sessionId, path, mountOpts)`
+##### `await client.drive.readdir(sessionId, dirName, readdirOpts)`
+##### `await client.drive.stat(sessionId, path)`
+
+### FUSE
 
 ## License
 MIT
