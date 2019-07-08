@@ -7,7 +7,9 @@ const {
   toHyperdriveOptions,
   fromHyperdriveOptions,
   toStat,
-  fromStat
+  fromStat,
+  toMount,
+  fromMount
 } = require('./lib/common')
 
 class MainClient {
@@ -169,6 +171,28 @@ class DriveClient {
     })
   }
 
+  publish (id, cb) {
+    const req = new rpc.drive.messages.PublishDriveRequest()
+
+    req.setId(id)
+
+    this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
+    })
+  }
+
+  unpublish (id, cb) {
+    const req = new rpc.drive.messages.UnpublishDriveRequest()
+
+    req.setId(id)
+
+    this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
+    })
+  }
+
   readFile (id, path, cb) {
     const req = new rpc.drive.messages.ReadFileRequest()
 
@@ -224,6 +248,20 @@ class DriveClient {
     })
   }
 
+  mount (id, path, opts, cb) {
+    const req = new rpc.drive.messages.MountDriveRequest()
+    path = path || '/'
+
+    req.setId(id)
+    req.setPath(path)
+    req.setOpts(toMount(opts))
+
+    this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
+      if (err) return cb(err)
+      return cb(null)
+    })
+  }
+
   watch (id, path, cb) {
 
   }
@@ -236,12 +274,12 @@ class DriveClient {
 
   }
 
-  closeSession (id, cb) {
+  close (id, cb) {
     const req = new rpc.drive.messages.CloseSessionRequest()
 
     req.setId(id)
 
-    this._client.closeSession(req, toMetadata({ token: this.token }), (err, rsp) => {
+    this._client.close(req, toMetadata({ token: this.token }), (err, rsp) => {
       if (err) return cb(err)
       return cb(null)
     })
