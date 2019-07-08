@@ -45,20 +45,37 @@ Returns:
 Close a session that was previously opened with `get`.
 
 ##### `await client.drive.publish(sessionId)`
-Advertise a drive (corresponding to a session) on the network.
+Advertise a drive (corresponding to a session) to the network.
 
 #### `await client.drive.unpublish(sessionId)`
-Stop advertising a drive (corresponding to a session) on the network.
+Stop advertising a drive (corresponding to a session) to the network.
 
 #### Drive-specific Operations
-The client currently only supports a subset of the Hyperdrive API. We're actively working on extending this (with the end-goal being complete parity)! Method arguments take the same form as those in Hyperdrive. The following methods are supported now:
-1. `await client.drive.writeFile(sessionId, path, content)`
-2. `const contents = await client.drive.readFile(sessionId, path)`
-3. `const mountInfo = await client.drive.mount(sessionId, path, mountOpts)`
-4. `const fileList = await client.drive.readdir(sessionId, dirName, readdirOpts)`
-5. `const stat = await client.drive.stat(sessionId, path)`
+The client currently only supports a subset of the Hyperdrive API. We're actively working on extending this (targeting complete parity)! 
+
+Method arguments take the same form as those in Hyperdrive. The following methods are supported now:
+1. `client.drive.writeFile(sessionId, path, content, cb(err))`
+2. `client.drive.readFile(sessionId, path, cb(err, content))`
+3. `client.drive.mount(sessionId, path, mountOpts, cb(err, mountInfo)`
+4. `client.drive.readdir(sessionId, dirName, readdirOpts, cb(err, fileList))`
+5. `client.drive.stat(sessionId, path, cb(err, stat))`
 
 ### FUSE
+The client library also provides programmatic access to the daemon's FUSE interface. You can mount/unmount your root drive, or mount and share subdrives:
+
+##### `client.fuse.mount(mnt, opts, cb)`
+Mount either the root drive (if `/mnt` is not specified), or a subdirectory within the root drive.
+- `mnt`: The mountpoint of the drive (currently enforced to be `/hyperdrive` if it's the root drive, and a subdirectory within `/hyperdrive/home` otherwise.
+- `opts`: Hyperdrive mount options (identical to those in Hyperdrive).
+
+##### `client.fuse.unmount(cb)`
+Unmounts the root drive.
+
+##### `client.fuse.publish(path, cb)`
+Advertise the drive mounted at `path` to the network.
+
+##### `client.fuse.unpublish(path, cb)`
+Stop advertisingthe drive mounted at `path` to the network.
 
 ## License
 MIT
