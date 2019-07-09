@@ -1,6 +1,8 @@
 # hyperdrive-daemon-client
 A Node client library and CLI tool for interacting with the Hyperdrive daemon.
 
+Implements the RPC methods defined in the [`hyperdrive-schemas`](https://github.com/andrewosh/hyperdrive-schemas) repo.
+
 ## Installation
 `npm i hyperdrive-daemon-client --save`
 
@@ -47,7 +49,7 @@ Close a session that was previously opened with `get`.
 ##### `await client.drive.publish(sessionId)`
 Advertise a drive (corresponding to a session) to the network.
 
-#### `await client.drive.unpublish(sessionId)`
+##### `await client.drive.unpublish(sessionId)`
 Stop advertising a drive (corresponding to a session) to the network.
 
 #### Drive-specific Operations
