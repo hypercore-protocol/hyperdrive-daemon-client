@@ -1,6 +1,8 @@
 # hyperdrive-daemon-client
 A Node client library and CLI tool for interacting with the Hyperdrive daemon.
 
+Implements the RPC methods defined in the [`hyperdrive-schemas`](https://github.com/andrewosh/hyperdrive-schemas) repo.
+
 ## Installation
 `npm i hyperdrive-daemon-client --save`
 
