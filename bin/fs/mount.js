@@ -46,19 +46,24 @@ exports.handler = function (argv) {
 
   function onerror (err) {
     console.error(chalk.red('Could not mount the drive:'))
-    console.error(chalk.red(`${err.details}`))
+    console.error(chalk.red(`${err.details || err}`))
   }
 
   function onsuccess (mnt, opts) {
+    const seeding = !!opts.key
+
     console.log(chalk.green('Mounted a drive with the following info:'))
     console.log()
     console.log(chalk.green(`  Mountpoint: ${mnt} `))
     console.log(chalk.green(`  Key:        ${opts.key.toString('hex')} `))
     if (opts.version) console.log(chalk.green(`  Version:    ${opts.version}`))
     if (opts.hash) console.log(chalk.green(`  Hash:       ${opts.hash}`))
-    console.log(chalk.green(`  Seeding:    ${opts.seed}`))
+    console.log(chalk.green(`  Seeding:    ${seeding}`))
     console.log()
-    const mntString = mnt === '/hyperdrive --root true' ? '' : mnt
-    console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive fs publish ${mntString}\` `))
+
+    if (!seeding) {
+      const mntString = mnt === '/hyperdrive --root true' ? '' : mnt
+      console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive fs publish ${mntString}\` `))
+    }
   }
 }

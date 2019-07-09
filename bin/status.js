@@ -15,7 +15,8 @@ exports.handler = async function (argv) {
 
   function onerror (err) {
     if (err.disconnected) return console.error(chalk.red('The Hyperdrive daemon is not running.'))
-    console.error(chalk.red(`Could not get the daemon status: ${err.details}`))
+    console.error(chalk.red(`Could not get the daemon status:`))
+    console.error(chalk.red(`${err.details || err}`))
   }
 
   function onsuccess () {

@@ -2,8 +2,8 @@ const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
 
-exports.command = 'unmount'
-exports.desc = 'Unmount the root drive.'
+exports.command = 'unmount [mnt]'
+exports.desc = 'Unmount a drive. The root drive will be unmounted if a mountpoint is not specified.'
 exports.builder = {}
 
 exports.handler = function (argv) {
@@ -13,19 +13,18 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    client.fuse.unmount(err => {
+    client.fuse.unmount(argv.mnt, err => {
       if (err) return onerror(err)
       return onsuccess()
     })
   }
 
   function onerror (err) {
-    console.error(chalk.red('Could not unmount the root drive:'))
-    console.error()
-    console.error(chalk.red(`${err.details}`))
+    console.error(chalk.red('Could not unmount the drive:'))
+    console.error(chalk.red(`${err.details || err}`))
   }
 
   function onsuccess (mnt, key) {
-    console.log(chalk.green('Successfully unmounted the root drive.'))
+    console.log(chalk.green('Successfully unmounted the drive.'))
   }
 }

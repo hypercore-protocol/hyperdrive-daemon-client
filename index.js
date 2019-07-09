@@ -145,8 +145,10 @@ class FuseClient {
     }))
   }
 
-  unmount (cb) {
+  unmount (mnt, cb) {
     const req = new rpc.fuse.messages.UnmountRequest()
+
+    req.setPath(mnt)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
