@@ -1,5 +1,6 @@
 const grpc = require('grpc')
 const thunky = require('thunky')
+const maybe = require('call-me-maybe')
 
 const rpc = require('./lib/rpc.js')
 const { loadMetadata } = require('./lib/metadata')
@@ -22,7 +23,15 @@ class MainClient {
     this.drive = null
     this._client = null
 
-    this.ready = thunky(this._ready.bind(this))
+    this._readyOnce = thunky(this._ready.bind(this))
+    this.ready = (cb) => {
+      return maybe(cb, new Promise((resolve, reject) => {
+        this._readyOnce(err => {
+          if (err) return reject(err)
+          return resolve()
+        })
+      }))
+    }
   }
 
   _ready (cb) {
@@ -57,28 +66,32 @@ class MainClient {
   }
 
   status (cb) {
-    this.ready(err => {
-      if (err) return cb(err)
-      const req = new rpc.main.messages.StatusRequest()
-      this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return cb(err)
-        return cb(null, rsp)
+    const req = new rpc.main.messages.StatusRequest()
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this.ready(err => {
+        if (err) return reject(err)
+        this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
+          if (err) return reject(err)
+          return resolve(rsp)
+        })
       })
-    })
+    }))
   }
 
   stop (cb) {
-    this.ready(err => {
-      if (err) return cb(err)
-      const req = new rpc.main.messages.StopRequest()
+    const req = new rpc.main.messages.StopRequest()
 
-
-      this._client.stop(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return cb(err)
-        // TODO: Response processing?
-        return cb(null, rsp)
+    return maybe(cb, new Promise((resolve, reject) => {
+      this.ready(err => {
+        if (err) return reject(err)
+        this._client.stop(req, toMetadata({ token: this.token }), (err, rsp) => {
+          if (err) return reject(err)
+          // TODO: Response processing?
+          return resolve(rsp)
+        })
       })
-    })
+    }))
   }
 }
 
@@ -95,13 +108,15 @@ class FuseClient {
     req.setPath(mnt)
     req.setOpts(toHyperdriveOptions(opts))
 
-    this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null, {
-        path: rsp.getPath(),
-        mountInfo: fromHyperdriveOptions(rsp.getMountinfo())
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve({
+          path: rsp.getPath(),
+          mountInfo: fromHyperdriveOptions(rsp.getMountinfo())
+        })
       })
-    })
+    }))
   }
 
   publish (mnt, cb) {
@@ -109,10 +124,12 @@ class FuseClient {
 
     req.setPath(mnt)
 
-    this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 
   unpublish (mnt, cb) {
@@ -120,31 +137,38 @@ class FuseClient {
 
     req.setPath(mnt)
 
-    this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 
   unmount (cb) {
     const req = new rpc.fuse.messages.UnmountRequest()
 
-    this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      // TODO: Response processing?
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        // TODO: Response processing?
+        return resolve()
+      })
+    }))
   }
 
   status (cb) {
     const req = new rpc.fuse.messages.FuseStatusRequest()
-    this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null, {
-        available: rsp.getAvailable(),
-        configured: rsp.getConfigured()
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve({
+          available: rsp.getAvailable(),
+          configured: rsp.getConfigured()
+        })
       })
-    })
+    }))
   }
 }
 
@@ -162,13 +186,15 @@ class DriveClient {
 
     req.setOpts(toHyperdriveOptions(opts))
 
-    this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null, {
-        opts: fromHyperdriveOptions(rsp.getOpts()),
-        id: rsp.getId()
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve({
+          opts: fromHyperdriveOptions(rsp.getOpts()),
+          id: rsp.getId()
+        })
       })
-    })
+    }))
   }
 
   publish (id, cb) {
@@ -176,10 +202,12 @@ class DriveClient {
 
     req.setId(id)
 
-    this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 
   unpublish (id, cb) {
@@ -187,10 +215,12 @@ class DriveClient {
 
     req.setId(id)
 
-    this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 
   readFile (id, path, cb) {
@@ -199,10 +229,12 @@ class DriveClient {
     req.setId(id)
     req.setPath(path)
 
-    this._client.readFile(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null, Buffer.from(rsp.getContent()))
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.readFile(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve(Buffer.from(rsp.getContent()))
+      })
+    }))
   }
 
   writeFile (id, path, content, cb) {
@@ -213,39 +245,47 @@ class DriveClient {
     req.setPath(path)
     req.setContent(content)
 
-    this._client.writeFile(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.writeFile(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 
   stat (id, path, opts, cb) {
     if (typeof opts === 'function') return this.stat(id, path, {}, opts)
     const req = new rpc.drive.messages.StatRequest()
+    opts = opts || {}
 
     req.setId(id)
     req.setPath(path)
     if (opts.lstat) req.setLstat(opts.lstat)
 
-    this._client.stat(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null, fromStat(rsp.getStat()))
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.stat(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve(fromStat(rsp.getStat()))
+      })
+    }))
   }
 
   readdir (id, path, opts, cb) {
     if (typeof opts === 'function') return this.readdir(id, path, {}, opts)
     const req = new rpc.drive.messages.ReadDirectoryRequest()
+    opts = opts || {}
     path = path || '/'
 
     req.setId(id)
     req.setPath(path)
     if (opts.recursive) req.setRecursive(opts.recursive)
 
-    this._client.readdir(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null, rsp.getFilesList())
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.readdir(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve(rsp.getFilesList())
+      })
+    }))
   }
 
   mount (id, path, opts, cb) {
@@ -256,10 +296,12 @@ class DriveClient {
     req.setPath(path)
     req.setOpts(toMount(opts))
 
-    this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 
   watch (id, path, cb) {
@@ -279,10 +321,12 @@ class DriveClient {
 
     req.setId(id)
 
-    this._client.close(req, toMetadata({ token: this.token }), (err, rsp) => {
-      if (err) return cb(err)
-      return cb(null)
-    })
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.close(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
   }
 }
 

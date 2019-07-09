@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/andrewosh/hyperdrive-daemon-client#readme",
   "dependencies": {
+    "call-me-maybe": "^1.0.1",
     "chalk": "^2.4.2",
     "dat-encoding": "^5.0.1",
     "fs-extra": "^8.0.1",
