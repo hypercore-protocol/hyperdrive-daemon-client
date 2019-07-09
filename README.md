@@ -47,7 +47,7 @@ Close a session that was previously opened with `get`.
 ##### `await client.drive.publish(sessionId)`
 Advertise a drive (corresponding to a session) to the network.
 
-#### `await client.drive.unpublish(sessionId)`
+##### `await client.drive.unpublish(sessionId)`
 Stop advertising a drive (corresponding to a session) to the network.
 
 #### Drive-specific Operations
