@@ -27,6 +27,9 @@ Check out the [daemon tests](https://github.com/andrewosh/hyperdrive-daemon/blob
 ### Hyperdrive
 The client's Hyperdrive API is designed to mirror the methods in Hyperdrive as closely as possible. 
 
+##### `await client.ready([cb])`
+Returns a promise which resolves when the client is ready to use. Can accept a callback to use instead of the returned promise.
+
 #### Session Operations
 
 ##### `const { info, id } = await client.drive.get(opts)`
