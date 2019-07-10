@@ -50,7 +50,7 @@ exports.handler = function (argv) {
   }
 
   function onsuccess (mnt, opts) {
-    const seeding = !!opts.key
+    const seeding = !!argv.key
 
     console.log(chalk.green('Mounted a drive with the following info:'))
     console.log()
