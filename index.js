@@ -1,4 +1,4 @@
-const grpc = require('grpc')
+const grpc = require('@grpc/grpc-js')
 const thunky = require('thunky')
 const maybe = require('call-me-maybe')
 
