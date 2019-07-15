@@ -11,7 +11,7 @@ This module provides both programmatic and CLI access to the [Hyperdrive daemon]
 
 Each client takes an optional gRPC endpoint and access token as constructor arguments:
 ```js
-const HyperdriveClient = require('hyperdrive-daemon-client')
+const { HyperdriveClient } = require('hyperdrive-daemon-client')
 const client = new HyperdriveClient('localhost:3101', 'your_access_token')
 ```
 
