@@ -1,5 +1,6 @@
 const grpc = require('@grpc/grpc-js')
 const thunky = require('thunky')
+const collectStream = require('stream-collector')
 const maybe = require('call-me-maybe')
 
 const rpc = require('./lib/rpc.js')
@@ -10,7 +11,9 @@ const {
   toStat,
   fromStat,
   toMount,
-  fromMount
+  fromMount,
+  toChunks,
+  fromDriveStats
 } = require('./lib/common')
 
 class MainClient {
@@ -225,6 +228,32 @@ class DriveClient {
     }))
   }
 
+  allStats (cb) {
+    const req = new rpc.drive.messages.StatsRequest()
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.allStats(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        const statsList = rsp.getStatsList().map(stat => fromDriveStats(stat))
+        return resolve(statsList)
+      })
+    }))
+  }
+
+  stats (id, cb) {
+    const req = new rpc.drive.messages.DriveStatsRequest()
+
+    req.setId(id)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.stats(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        const stats = fromDriveStats(rsp.getStats())
+        return resolve(stats)
+      })
+    }))
+  }
+
   readFile (id, path, cb) {
     const req = new rpc.drive.messages.ReadFileRequest()
 
@@ -232,26 +261,37 @@ class DriveClient {
     req.setPath(path)
 
     return maybe(cb, new Promise((resolve, reject) => {
-      this._client.readFile(req, toMetadata({ token: this.token }), (err, rsp) => {
+      const call = this._client.readFile(req, toMetadata({ token: this.token }))
+      collectStream(call, (err, rsps) => {
         if (err) return reject(err)
-        return resolve(Buffer.from(rsp.getContent()))
+        const bufs = rsps.map(rsp => Buffer.from(rsp.getChunk()))
+        return resolve(Buffer.concat(bufs))
       })
     }))
   }
 
   writeFile (id, path, content, cb) {
-    const req = new rpc.drive.messages.WriteFileRequest()
     if (!(content instanceof Buffer)) content = Buffer.from(content)
 
+    const req = new rpc.drive.messages.WriteFileRequest()
     req.setId(id)
     req.setPath(path)
-    req.setContent(content)
 
     return maybe(cb, new Promise((resolve, reject) => {
-      this._client.writeFile(req, toMetadata({ token: this.token }), (err, rsp) => {
+      const call = this._client.writeFile(toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
         return resolve()
       })
+      call.write(req)
+
+      const chunks = toChunks(content)
+
+      for (const chunk of chunks) {
+        const req = new rpc.drive.messages.WriteFileRequest()
+        req.setChunk(chunk)
+        call.write(req)
+      }
+      call.end()
     }))
   }
 
@@ -294,9 +334,12 @@ class DriveClient {
     const req = new rpc.drive.messages.MountDriveRequest()
     path = path || '/'
 
+    const mountInfo = new rpc.drive.messages.MountInfo()
+    mountInfo.setPath(path)
+    mountInfo.setOpts(toMount(opts))
+
     req.setId(id)
-    req.setPath(path)
-    req.setOpts(toMount(opts))
+    req.setInfo(mountInfo)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.mount(req, toMetadata({ token: this.token }), (err, rsp) => {
@@ -306,15 +349,22 @@ class DriveClient {
     }))
   }
 
+  unmount (id, path, cb) {
+    const req = new rpc.drive.messages.UnmountDriveRequest()
+    path = path || '/'
+
+    req.setId(id)
+    req.setPath(path)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.unmount(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
   watch (id, path, cb) {
-
-  }
-
-  listen (id, watcher, cb) {
-
-  }
-
-  unwatch (id, watcher, cb) {
 
   }
 

@@ -33,6 +33,7 @@
     "fs-extra": "^8.0.1",
     "google-protobuf": "^3.8.0",
     "hyperdrive-schemas": "^0.9.0",
+    "stream-collector": "^1.0.1",
     "thunky": "^1.0.3",
     "yargs": "^13.2.4"
   },
