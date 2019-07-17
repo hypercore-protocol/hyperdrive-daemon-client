@@ -1,6 +1,9 @@
+const { Readable, Writable } = require('@mafintosh/streamx')
 const grpc = require('@grpc/grpc-js')
 const thunky = require('thunky')
 const collectStream = require('stream-collector')
+const pumpify = require('pumpify')
+const map = require('through2-map')
 const maybe = require('call-me-maybe')
 
 const rpc = require('./lib/rpc.js')
@@ -96,6 +99,11 @@ class MainClient {
       })
     }))
   }
+
+  close () {
+    if (this.fuse) this.fuse.closeClient()
+    if (this.drive) this.drive.closeClient()
+  }
 }
 
 class FuseClient {
@@ -103,6 +111,10 @@ class FuseClient {
     this.endpoint = endpoint
     this.token = token
     this._client = new rpc.fuse.services.FuseClient(this.endpoint, grpc.credentials.createInsecure())
+  }
+
+  closeClient () {
+    return grpc.closeClient(this._client)
   }
 
   mount (mnt, opts, cb) {
@@ -185,6 +197,10 @@ class DriveClient {
     this._client = new rpc.drive.services.DriveClient(this.endpoint, grpc.credentials.createInsecure())
   }
 
+  closeClient () {
+    return grpc.closeClient(this._client)
+  }
+
   get (opts, cb) {
     if (typeof opts === 'function') return this.get(null, opts)
     const req = new rpc.drive.messages.GetDriveRequest()
@@ -254,6 +270,22 @@ class DriveClient {
     }))
   }
 
+  createReadStream (id, path, opts = {}) {
+    const req = new rpc.drive.messages.ReadStreamRequest()
+
+    req.setId(id)
+    req.setPath(path)
+    if (opts.start) req.setStart(opts.start)
+    if (opts.length) req.setLength(opts.length)
+    if (opts.end) req.setEnd(opts.end)
+
+    const call = this._client.createReadStream(req, toMetadata({ token: this.token }))
+    return pumpify(
+      call,
+      map.obj(rsp => Buffer.from(rsp.getChunk()))
+    )
+  }
+
   readFile (id, path, cb) {
     const req = new rpc.drive.messages.ReadFileRequest()
 
@@ -268,6 +300,47 @@ class DriveClient {
         return resolve(Buffer.concat(bufs))
       })
     }))
+  }
+
+  createWriteStream (id, path, opts = {}) {
+    const req = new rpc.drive.messages.WriteStreamRequest()
+
+    req.setId(id)
+    req.setPath(path)
+    req.setOpts(toStat(opts))
+
+    var flushed = false
+    var callback = null
+
+    const call = this._client.createWriteStream(toMetadata({ token: this.token }), err => {
+      if (err && stream && !stream.destroyed) return stream.destroy(err)
+      flushed = true
+      if (callback) callback(null)
+    })
+    call.write(req)
+
+    const stream = new Writable({
+      write: (data, cb) => {
+        return call.write(data, cb)
+      },
+
+      final: (cb) => {
+        call.end()
+        if (flushed) return process.nextTick(cb, null)
+        callback = cb
+        return null
+      },
+
+      map: chunk => {
+        const req = new rpc.drive.messages.WriteStreamRequest()
+        req.setChunk(Buffer.from(chunk))
+        return req
+      }
+    })
+
+    stream.on('finish', () => console.log('FINISHED'))
+    stream.on('error', err => console.error('ERROR IN CLIENT:', err))
+    return stream
   }
 
   writeFile (id, path, content, cb) {
@@ -365,7 +438,23 @@ class DriveClient {
   }
 
   watch (id, path, cb) {
+    const req = new rpc.drive.messages.WatchRequest()
 
+    req.setId(id)
+    req.setPath(path)
+
+    const call = this._client.watch(toMetadata({ token: this.token }))
+    call.write(req)
+
+    call.on('data', () => cb())
+
+    return function (cb) {
+      return maybe(cb, new Promise(resolve => {
+        const req = new rpc.drive.messages.WatchRequest()
+        call.write(req)
+        return resolve()
+      }))
+    }
   }
 
   close (id, cb) {

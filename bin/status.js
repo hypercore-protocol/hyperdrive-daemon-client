@@ -6,8 +6,13 @@ exports.command = 'status'
 exports.desc = 'Check the status of the Hyperdrive daemon.'
 exports.handler = async function (argv) {
   loadClient((err, client) => {
-    if (err) return onerror(err)
+    if (err) {
+      console.log('CLOSING')
+      client.close()
+      return onerror(err)
+    }
     client.status(err => {
+      client.close()
       if (err) return onerror(err)
       return onsuccess()
     })
