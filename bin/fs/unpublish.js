@@ -1,6 +1,5 @@
 const p = require('path')
 const chalk = require('chalk')
-const datEncoding = require('dat-encoding')
 
 const loadClient = require('../../lib/loader')
 

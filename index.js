@@ -1,4 +1,4 @@
-const { Readable, Writable } = require('@mafintosh/streamx')
+const { Writable } = require('@mafintosh/streamx')
 const grpc = require('@grpc/grpc-js')
 const thunky = require('thunky')
 const collectStream = require('stream-collector')
@@ -14,7 +14,6 @@ const {
   toStat,
   fromStat,
   toMount,
-  fromMount,
   toChunks,
   fromDriveStats
 } = require('./lib/common')
@@ -493,5 +492,5 @@ function toMetadata (obj) {
 module.exports = {
   HyperdriveClient: MainClient,
   rpc,
-  loadMetadata,
+  loadMetadata
 }
