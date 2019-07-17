@@ -22,9 +22,11 @@ exports.handler = function (argv) {
   function onerror (err) {
     console.error(chalk.red('Could not unmount the drive:'))
     console.error(chalk.red(`${err.details || err}`))
+    process.exit(1)
   }
 
   function onsuccess (mnt, key) {
     console.log(chalk.green('Successfully unmounted the drive.'))
+    process.exit(0)
   }
 }

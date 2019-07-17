@@ -114,7 +114,8 @@ class FuseClient {
   }
 
   closeClient () {
-    return grpc.closeClient(this._client)
+    const channel = this._client.getChannel()
+    channel.close()
   }
 
   mount (mnt, opts, cb) {
@@ -198,7 +199,8 @@ class DriveClient {
   }
 
   closeClient () {
-    return grpc.closeClient(this._client)
+    const channel = this._client.getChannel()
+    channel.close()
   }
 
   get (opts, cb) {

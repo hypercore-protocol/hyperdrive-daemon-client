@@ -47,6 +47,7 @@ exports.handler = function (argv) {
   function onerror (err) {
     console.error(chalk.red('Could not mount the drive:'))
     console.error(chalk.red(`${err.details || err}`))
+    process.exit(1)
   }
 
   function onsuccess (mnt, opts) {
@@ -65,5 +66,6 @@ exports.handler = function (argv) {
       const mntString = mnt === '/hyperdrive --root true' ? '' : mnt
       console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive fs publish ${mntString}\` `))
     }
+    process.exit(0)
   }
 }

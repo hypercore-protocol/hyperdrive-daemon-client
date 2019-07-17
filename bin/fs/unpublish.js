@@ -27,9 +27,11 @@ exports.handler = function (argv) {
   function onerror (err) {
     console.error(chalk.red('Could not unpublish the drive:'))
     console.error(chalk.red(`${err.details || err}`))
+    process.exit(1)
   }
 
   function onsuccess (mnt) {
     console.log(chalk.green(`Unpublished the drive mounted at ${mnt}`))
+    process.exit(0)
   }
 }
