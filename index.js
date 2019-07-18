@@ -382,7 +382,7 @@ class RemoteHyperdrive {
   }
 
   stat (path, opts, cb) {
-    if (typeof opts === 'function') return this.stat(id, path, {}, opts)
+    if (typeof opts === 'function') return this.stat(path, {}, opts)
     const req = new rpc.drive.messages.StatRequest()
     opts = opts || {}
 
@@ -399,7 +399,7 @@ class RemoteHyperdrive {
   }
 
   mkdir (path, opts, cb) {
-    if (typeof opts === 'function') return this.mkdir(id, path, {}, opts)
+    if (typeof opts === 'function') return this.mkdir(path, {}, opts)
     const req = new rpc.drive.messages.MkdirRequest()
     opts = opts || {}
 
@@ -430,7 +430,7 @@ class RemoteHyperdrive {
   }
 
   readdir (path, opts, cb) {
-    if (typeof opts === 'function') return this.readdir(id, path, {}, opts)
+    if (typeof opts === 'function') return this.readdir(path, {}, opts)
     const req = new rpc.drive.messages.ReadDirectoryRequest()
     opts = opts || {}
     path = path || '/'
