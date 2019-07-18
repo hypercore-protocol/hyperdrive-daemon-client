@@ -211,36 +211,8 @@ class DriveClient {
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        return resolve({
-          opts: fromHyperdriveOptions(rsp.getOpts()),
-          id: rsp.getId()
-        })
-      })
-    }))
-  }
-
-  publish (id, cb) {
-    const req = new rpc.drive.messages.PublishDriveRequest()
-
-    req.setId(id)
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return reject(err)
-        return resolve()
-      })
-    }))
-  }
-
-  unpublish (id, cb) {
-    const req = new rpc.drive.messages.UnpublishDriveRequest()
-
-    req.setId(id)
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return reject(err)
-        return resolve()
+        const drive = new RemoteHyperdrive(this._client, this.token, rsp.getId(), fromHyperdriveOptions(rsp.getOpts()))
+        return resolve(drive)
       })
     }))
   }
@@ -256,11 +228,51 @@ class DriveClient {
       })
     }))
   }
+}
 
-  stats (id, cb) {
+class RemoteHyperdrive {
+  constructor (client, token, id, opts) {
+    this._client = client
+    this.token = token
+    this.id = id
+
+    this.key = opts.key
+    this.version = opts.version
+    this.hash = opts.hash
+    this.writable = opts.writable
+  }
+
+  publish (cb) {
+    const req = new rpc.drive.messages.PublishDriveRequest()
+
+    req.setId(this.id)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+  unpublish (cb) {
+    const req = new rpc.drive.messages.UnpublishDriveRequest()
+
+    req.setId(this.id)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+
+  stats (cb) {
     const req = new rpc.drive.messages.DriveStatsRequest()
 
-    req.setId(id)
+    req.setId(this.id)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.stats(req, toMetadata({ token: this.token }), (err, rsp) => {
@@ -271,10 +283,10 @@ class DriveClient {
     }))
   }
 
-  createReadStream (id, path, opts = {}) {
+  createReadStream (path, opts = {}) {
     const req = new rpc.drive.messages.ReadStreamRequest()
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
     if (opts.start) req.setStart(opts.start)
     if (opts.length) req.setLength(opts.length)
@@ -287,10 +299,10 @@ class DriveClient {
     )
   }
 
-  readFile (id, path, cb) {
+  readFile (path, cb) {
     const req = new rpc.drive.messages.ReadFileRequest()
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
 
     return maybe(cb, new Promise((resolve, reject) => {
@@ -303,10 +315,10 @@ class DriveClient {
     }))
   }
 
-  createWriteStream (id, path, opts = {}) {
+  createWriteStream (path, opts = {}) {
     const req = new rpc.drive.messages.WriteStreamRequest()
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
     req.setOpts(toStat(opts))
 
@@ -344,11 +356,11 @@ class DriveClient {
     return stream
   }
 
-  writeFile (id, path, content, cb) {
+  writeFile (path, content, cb) {
     if (!(content instanceof Buffer)) content = Buffer.from(content)
 
     const req = new rpc.drive.messages.WriteFileRequest()
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
 
     return maybe(cb, new Promise((resolve, reject) => {
@@ -369,12 +381,12 @@ class DriveClient {
     }))
   }
 
-  stat (id, path, opts, cb) {
+  stat (path, opts, cb) {
     if (typeof opts === 'function') return this.stat(id, path, {}, opts)
     const req = new rpc.drive.messages.StatRequest()
     opts = opts || {}
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
     if (opts.lstat) req.setLstat(opts.lstat)
 
@@ -386,13 +398,44 @@ class DriveClient {
     }))
   }
 
-  readdir (id, path, opts, cb) {
+  mkdir (path, opts, cb) {
+    if (typeof opts === 'function') return this.mkdir(id, path, {}, opts)
+    const req = new rpc.drive.messages.MkdirRequest()
+    opts = opts || {}
+
+    req.setId(this.id)
+    req.setPath(path)
+    req.setOpts(toStat(opts))
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.mkdir(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+  rmdir (path, cb) {
+    const req = new rpc.drive.messages.RmdirRequest()
+
+    req.setId(this.id)
+    req.setPath(path)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.rmdir(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+  readdir (path, opts, cb) {
     if (typeof opts === 'function') return this.readdir(id, path, {}, opts)
     const req = new rpc.drive.messages.ReadDirectoryRequest()
     opts = opts || {}
     path = path || '/'
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
     if (opts.recursive) req.setRecursive(opts.recursive)
 
@@ -404,7 +447,7 @@ class DriveClient {
     }))
   }
 
-  mount (id, path, opts, cb) {
+  mount (path, opts, cb) {
     const req = new rpc.drive.messages.MountDriveRequest()
     path = path || '/'
 
@@ -412,7 +455,7 @@ class DriveClient {
     mountInfo.setPath(path)
     mountInfo.setOpts(toMount(opts))
 
-    req.setId(id)
+    req.setId(this.id)
     req.setInfo(mountInfo)
 
     return maybe(cb, new Promise((resolve, reject) => {
@@ -423,11 +466,11 @@ class DriveClient {
     }))
   }
 
-  unmount (id, path, cb) {
+  unmount (path, cb) {
     const req = new rpc.drive.messages.UnmountDriveRequest()
     path = path || '/'
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
 
     return maybe(cb, new Promise((resolve, reject) => {
@@ -438,10 +481,10 @@ class DriveClient {
     }))
   }
 
-  watch (id, path, cb) {
+  watch (path, cb) {
     const req = new rpc.drive.messages.WatchRequest()
 
-    req.setId(id)
+    req.setId(this.id)
     req.setPath(path)
 
     const call = this._client.watch(toMetadata({ token: this.token }))
@@ -458,10 +501,25 @@ class DriveClient {
     }
   }
 
-  close (id, cb) {
+  symlink (target, linkname, cb) {
+    const req = new rpc.drive.messages.SymlinkRequest()
+
+    req.setId(this.id)
+    req.setTarget(target)
+    req.setLinkname(linkname)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.symlink(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+  close (cb) {
     const req = new rpc.drive.messages.CloseSessionRequest()
 
-    req.setId(id)
+    req.setId(this.id)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.close(req, toMetadata({ token: this.token }), (err, rsp) => {
