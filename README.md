@@ -30,7 +30,7 @@ The client's Hyperdrive API is designed to mirror the methods in Hyperdrive as c
 #### General Operations
 Operations to manage sessions or get more general information about the state of the daemon.
 
-##### `const { info, id } = await client.drive.get(opts)`
+##### `const drive = await client.drive.get(opts)`
 Creates a Hyperdrive using the provided drive options (if one has not previously been created), then opens a session for that drive.
 
 Options can include:
@@ -39,21 +39,20 @@ Options can include:
 - `hash`: A root tree hash that will be used for validation (_Note: currently unimplemented_).
 
 Returns:
-- `id`: A session ID that can be used in subsequent drive-specific commands.
-- `info`: Drive info that can include:
-   - `key`: The Hyperdrive key
-   - `version`: The Hyperdrive version
+- `drive`: A remote Hyperdrive instance that can be used for subsequent drive-specific commands.
    
 ##### `const allStats = await client.drive.allStats()`
 Get networking statistics for all drives being actively managed by the daemon. The returned object is a list of stats results of the form described below.
    
-#### Session-specific Operations
+#### Drive-specific Operations
 Each of the following is not a Hyperdrive method, but applies only to a single session.
 
-##### `await client.drive.close(sessionId)`
-Close a session that was previously opened with `get`.
+##### `await drive.close()`
+Close a remote drive's underlying session.
 
-##### `const stats = await client.drive.stats(sessionId)`
+_Note: This currently does not close the actual Hyperdrive in the daemon. _
+
+##### `const stats = await drive.stats()`
 Get networking statistics for a drive.
 
 The returned statistics will be a list of stats per-mount, with top-level statistics contained in the entry for the '/' mount, eg:
@@ -61,30 +60,30 @@ The returned statistics will be a list of stats per-mount, with top-level statis
 [{ path: '/', metadata: { ... }, content: { ... } }, { path: '/a', metadata: { ... }, content: { ... } }, ... ]
 ```
 
-##### `await client.drive.publish(sessionId)`
-Advertise a drive (corresponding to a session) to the network.
+##### `await drive.publish()`
+Advertise a drive to the discovery network.
 
-##### `await client.drive.unpublish(sessionId)`
-Stop advertising a drive (corresponding to a session) to the network.
+##### `await drive.unpublish()`
+Stop advertising a drive to the discovery network.
 
-#### Drive-specific Operations
+#### Hyperdrive Methods
 The client currently only supports a subset of the Hyperdrive API. We're actively working on extending this (targeting complete parity)! Each method's options mirror those in the [hyperdrive module](https://github.com/mafintosh/hyperdrive).
 
 Each method returns a Promise, but can optionally take a callback (to more accurately reflect the Hyperdrive API).
 
-Method arguments take the same form as those in Hyperdrive, with the addition of the session ID. The following methods are supported as of now:
+Method arguments take the same form as those in Hyperdrive. The following methods are supported as of now:
 
-1. `client.drive.createWriteStream(sessionId, path, opts)`
-2. `client.drive.writeFile(sessionId, path, content, cb(err))`
-3. `client.drive.createReadStream(sessionId, path, opts)`
-4. `client.drive.readFile(sessionId, path, cb(err, content))`
-5. `client.drive.mount(sessionId, path, mountOpts, cb(err, mountInfo)`
-6. `client.drive.unmount(sessionId, path, cb(err))`
-7. `client.drive.readdir(sessionId, dirName, readdirOpts, cb(err, fileList))`
-8. `client.drive.stat(sessionId, path, cb(err, stat))`
-9. `client.drive.watch(sessionId, path, function onwatch () {})`
-10. `client.drive.mkdir(sessionId, dirName, opts, cb(err)`
-11. `client.drive.rmdir(sessionId, dirName, cb(err)`
+1. `drive.createWriteStream(path, opts)`
+2. `drive.writeFile(path, content, cb(err))`
+3. `drive.createReadStream(path, opts)`
+4. `drive.readFile(path, cb(err, content))`
+5. `drive.mount(path, mountOpts, cb(err, mountInfo)`
+6. `drive.unmount(path, cb(err))`
+7. `drive.readdir(dirName, readdirOpts, cb(err, fileList))`
+8. `drive.stat(path, cb(err, stat))`
+9. `drive.watch(path, function onwatch () {})`
+10. `drive.mkdir(dirName, opts, cb(err)`
+11. `drive.rmdir(dirName, cb(err)`
 
 ### FUSE
 The client library also provides programmatic access to the daemon's FUSE interface. You can mount/unmount your root drive, or mount and share subdrives:
