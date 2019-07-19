@@ -351,8 +351,6 @@ class RemoteHyperdrive {
       }
     })
 
-    stream.on('finish', () => console.log('FINISHED'))
-    stream.on('error', err => console.error('ERROR IN CLIENT:', err))
     return stream
   }
 
@@ -394,6 +392,20 @@ class RemoteHyperdrive {
       this._client.stat(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
         return resolve(fromStat(rsp.getStat()))
+      })
+    }))
+  }
+
+  unlink (path, cb) {
+    const req = new rpc.drive.messages.UnlinkRequest()
+
+    req.setId(this.id)
+    req.setPath(path)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.unlink(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err && err.errno !== 2) return reject(err)
+        return resolve()
       })
     }))
   }
