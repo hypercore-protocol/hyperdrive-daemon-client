@@ -1,10 +1,15 @@
-const { Writable } = require('@mafintosh/streamx')
+const { EventEmitter } = require('events')
 const grpc = require('@grpc/grpc-js')
 const thunky = require('thunky')
 const collectStream = require('stream-collector')
+const pump = require('pump')
 const pumpify = require('pumpify')
 const map = require('through2-map')
 const maybe = require('call-me-maybe')
+const codecs = require('codecs')
+
+const { Writable } = require('@mafintosh/streamx')
+const { Stat } = require('hyperdrive-schemas')
 
 const rpc = require('./lib/rpc.js')
 const { loadMetadata } = require('./lib/metadata')
@@ -15,13 +20,16 @@ const {
   fromStat,
   toMount,
   toChunks,
-  fromDriveStats
+  fromDiffEntry,
+  fromDriveStats,
+  fromDownloadProgress
 } = require('./lib/common')
 
 class MainClient {
-  constructor (endpoint, token) {
+  constructor (endpoint, token, opts = {}) {
     this.endpoint = endpoint
     this.token = token
+    this.opts = opts
 
     // Set in this._ready
     this.fuse = null
@@ -60,7 +68,7 @@ class MainClient {
 
       self._client = new rpc.main.services.HyperdriveClient(self.endpoint, grpc.credentials.createInsecure())
       // TODO: Determine how long to wait for connection.
-      self._client.waitForReady(Date.now() + 200, err => {
+      self._client.waitForReady(Date.now() + (self.opts.connectionTimeout || 500), err => {
         if (err) {
           err.disconnected = true
           return cb(err)
@@ -211,7 +219,7 @@ class DriveClient {
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.get(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        const drive = new RemoteHyperdrive(this._client, this.token, rsp.getId(), fromHyperdriveOptions(rsp.getOpts()))
+        const drive = new RemoteHyperdrive(this, this._client, this.token, rsp.getId(), fromHyperdriveOptions(rsp.getOpts()))
         return resolve(drive)
       })
     }))
@@ -231,15 +239,37 @@ class DriveClient {
 }
 
 class RemoteHyperdrive {
-  constructor (client, token, id, opts) {
+  constructor (drives, client, token, id, opts) {
     this._client = client
+    this._drives = drives
     this.token = token
     this.id = id
+    this.opts = opts
 
     this.key = opts.key
-    this.version = opts.version
     this.hash = opts.hash
     this.writable = opts.writable
+  }
+
+  version (cb) {
+    const req = new rpc.drive.messages.DriveVersionRequest()
+
+    req.setId(this.id)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.version(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve(rsp.getVersion())
+      })
+    }))
+  }
+
+  checkout (version) {
+    return this._drives.get({
+      ...this.opts,
+      version,
+      writable: false
+    })
   }
 
   publish (cb) {
@@ -268,7 +298,6 @@ class RemoteHyperdrive {
     }))
   }
 
-
   stats (cb) {
     const req = new rpc.drive.messages.DriveStatsRequest()
 
@@ -281,6 +310,119 @@ class RemoteHyperdrive {
         return resolve(stats)
       })
     }))
+  }
+
+  download (path, opts) {
+    const req = new rpc.drive.messages.DownloadRequest()
+
+    if (path) req.setPath(path)
+    const detailed = opts && opts.detailed
+    req.setDetailed(detailed)
+
+    var downloadId = null
+
+    const dl = new EventEmitter()
+    Object.assign(dl, {
+      cancel: (cb) => {
+        if (!downloadId) return cb(new Error('Cancel must be called after the download event has been received.'))
+        return this.undownload(downloadId, cb)
+      }
+    })
+
+    const call = this._client.download(req, toMetadata({ token: this.token }))
+    pump(
+      call,
+      map.obj(handleDownloadResponse),
+      err => {
+        if (err) dl.emit('error', err)
+      }
+    )
+
+    return dl
+
+    function handleDownloadResponse (rsp) {
+      const type = rsp.getType()
+      const id = rsp.getDownloadid()
+      if (id && !downloadId) downloadId = id
+
+      var event = fromDownloadRsp(rsp)
+
+      switch (type) {
+        case rpc.drive.messages.DownloadResponse.Type.START:
+          dl.emit('start', event)
+          break
+
+        case rpc.drive.messages.DownloadResponse.Type.PROGRESS:
+          dl.emit('progress', event)
+          break
+
+        case rpc.drive.messages.DownloadResponse.Type.FINISH:
+          if (rsp.getCancelled()) {
+            dl.emit('cancel', event)
+          } else {
+            dl.emit('finish', event)
+          }
+          break
+
+        default:
+          dl.emit('error', new Error(`Unknown download response type: ${type}`))
+          break
+      }
+    }
+
+    function fromDownloadRsp (rsp) {
+      const event = {}
+      event.totals = fromDownloadProgress(rsp.getProgress())
+      if (detailed) {
+        const fileMap = new Map()
+        const files = rsp.getFilesList()
+        for (const fileRsp of files) {
+          fileMap.set(fileRsp.getPath(), fromDownloadProgress(fileRsp.getProgress()))
+        }
+        event.files = fileMap
+      }
+    }
+  }
+
+  undownload (downloadId, cb) {
+    const req = new rpc.drive.messages.UndownloadRequest()
+
+    req.setId(this.id)
+    req.setDownloadid(downloadId)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.undownload(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+  async createDiffStream (other, prefix) {
+    if (typeof other === 'string') {
+      return this.createDiffStream(0, other)
+    } else if (typeof other === 'object') {
+      const version = await other.version()
+      return this.createDiffStream(version, prefix)
+    }
+    if (other === undefined) other = 0
+
+    const req = new rpc.drive.messages.DiffStreamRequest()
+    req.setId(this.id)
+    req.setOther(other)
+    if (prefix) req.setPrefix(prefix)
+
+    const call = this._client.createDiffStream(req, toMetadata({ token: this.token }))
+    return pumpify.obj(
+      call,
+      map.obj(rsp => {
+        return {
+          type: rsp.getType(),
+          name: rsp.getName(),
+          value: fromDiffEntry(rsp.getValue())
+        }
+      })
+    )
   }
 
   createReadStream (path, opts = {}) {
@@ -299,18 +441,32 @@ class RemoteHyperdrive {
     )
   }
 
-  readFile (path, cb) {
-    const req = new rpc.drive.messages.ReadFileRequest()
+  readFile (path, opts = {}, cb) {
+    if (typeof opts === 'function') return this.readFile(path, null, opts)
 
+    const req = new rpc.drive.messages.ReadFileRequest()
     req.setId(this.id)
     req.setPath(path)
+    var codec = null
+
+    if (opts.encoding) {
+      codec = typeof opts.encoding === 'object' ? opts.encoding: codecs(opts.encoding)
+    }
 
     return maybe(cb, new Promise((resolve, reject) => {
       const call = this._client.readFile(req, toMetadata({ token: this.token }))
       collectStream(call, (err, rsps) => {
         if (err) return reject(err)
         const bufs = rsps.map(rsp => Buffer.from(rsp.getChunk()))
-        return resolve(Buffer.concat(bufs))
+        var decoded = Buffer.concat(bufs)
+        if (codec) {
+          try {
+            decoded = codec.decode(decoded)
+          } catch (err) {
+            return reject(err)
+          }
+        }
+        return resolve(decoded)
       })
     }))
   }
@@ -354,7 +510,8 @@ class RemoteHyperdrive {
     return stream
   }
 
-  writeFile (path, content, cb) {
+  writeFile (path, content, opts = {}, cb) {
+    if (typeof opts === 'function') return this.writeFile(path, content, null, opts)
     if (!(content instanceof Buffer)) content = Buffer.from(content)
 
     const req = new rpc.drive.messages.WriteFileRequest()
@@ -391,7 +548,26 @@ class RemoteHyperdrive {
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.stat(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        return resolve(fromStat(rsp.getStat()))
+        const rawStat = fromStat(rsp.getStat())
+        return resolve(new Stat(rawStat))
+      })
+    }))
+  }
+
+  lstat (path, opts, cb) {
+    if (typeof opts === 'function') return this.stat(path, {}, opts)
+    const req = new rpc.drive.messages.StatRequest()
+    opts = opts || {}
+
+    req.setId(this.id)
+    req.setPath(path)
+    req.setLstat(true)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.stat(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        const rawStat = fromStat(rsp.getStat())
+        return resolve(new Stat(rawStat))
       })
     }))
   }
