@@ -555,7 +555,7 @@ class RemoteHyperdrive {
   }
 
   lstat (path, opts, cb) {
-    if (typeof opts === 'function') return this.stat(path, {}, opts)
+    if (typeof opts === 'function') return this.lstat(path, {}, opts)
     const req = new rpc.drive.messages.StatRequest()
     opts = opts || {}
 
