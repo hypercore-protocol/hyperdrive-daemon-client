@@ -22,7 +22,8 @@ const {
   toChunks,
   fromDiffEntry,
   fromDriveStats,
-  fromDownloadProgress
+  fromDownloadProgress,
+  fromFileStats
 } = require('./lib/common')
 
 class MainClient {
@@ -315,8 +316,12 @@ class RemoteHyperdrive {
   download (path, opts) {
     const req = new rpc.drive.messages.DownloadRequest()
 
+    req.setId(this.id)
     if (path) req.setPath(path)
     const detailed = opts && opts.detailed
+    const statsInterval = opts && opts.statsInterval
+
+    if (statsInterval) req.setStatsinterval(statsInterval)
     req.setDetailed(detailed)
 
     var downloadId = null
@@ -345,23 +350,23 @@ class RemoteHyperdrive {
       const id = rsp.getDownloadid()
       if (id && !downloadId) downloadId = id
 
-      var event = fromDownloadRsp(rsp)
+      const { totals, byFile } = fromDownloadRsp(rsp)
 
       switch (type) {
         case rpc.drive.messages.DownloadResponse.Type.START:
-          dl.emit('start', event)
+          dl.emit('start', totals, byFile)
           break
 
         case rpc.drive.messages.DownloadResponse.Type.PROGRESS:
-          dl.emit('progress', event)
+          dl.emit('progress', totals, byFile)
+          break
+
+        case rpc.drive.messages.DownloadResponse.Type.CANCEL:
+          dl.emit('cancel', totals, byFile)
           break
 
         case rpc.drive.messages.DownloadResponse.Type.FINISH:
-          if (rsp.getCancelled()) {
-            dl.emit('cancel', event)
-          } else {
-            dl.emit('finish', event)
-          }
+          dl.emit('finish', totals, byFile)
           break
 
         default:
@@ -379,8 +384,9 @@ class RemoteHyperdrive {
         for (const fileRsp of files) {
           fileMap.set(fileRsp.getPath(), fromDownloadProgress(fileRsp.getProgress()))
         }
-        event.files = fileMap
+        event.byFile = fileMap
       }
+      return event
     }
   }
 
@@ -713,6 +719,21 @@ class RemoteHyperdrive {
       this._client.close(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
         return resolve()
+      })
+    }))
+  }
+
+  fileStats (name, cb) {
+    const req = new rpc.drive.messages.FileStatsRequest()
+
+    req.setId(this.id)
+    req.setPath(name)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.fileStats(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        const stats = fromFileStats(rsp.getStats())
+        return resolve(stats)
       })
     }))
   }
