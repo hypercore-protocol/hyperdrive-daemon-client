@@ -23,7 +23,8 @@ const {
   fromDiffEntry,
   fromDriveStats,
   fromDownloadProgress,
-  fromFileStats
+  fromFileStats,
+  setMetadata,
 } = require('./lib/common')
 
 class MainClient {
@@ -523,6 +524,7 @@ class RemoteHyperdrive {
     const req = new rpc.drive.messages.WriteFileRequest()
     req.setId(this.id)
     req.setPath(path)
+    req.setOpts(toStat(opts))
 
     return maybe(cb, new Promise((resolve, reject) => {
       const call = this._client.writeFile(toMetadata({ token: this.token }), (err, rsp) => {
@@ -539,6 +541,34 @@ class RemoteHyperdrive {
         call.write(req)
       }
       call.end()
+    }))
+  }
+
+  updateMetadata (path, metadata, cb) {
+    const req = new rpc.drive.messages.UpdateMetadataRequest()
+    req.setId(this.id)
+    req.setPath(path)
+    setMetadata(req.getMetadataMap(), metadata)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.updateMetadata(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
+  deleteMetadata (path, keys, cb) {
+    const req = new rpc.drive.messages.DeleteMetadataRequest()
+    req.setId(this.id)
+    req.setPath(path)
+    req.setKeysList(keys)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.deleteMetadata(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
     }))
   }
 
