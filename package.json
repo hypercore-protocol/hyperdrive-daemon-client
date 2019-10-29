@@ -34,7 +34,7 @@
     "dat-encoding": "^5.0.1",
     "fs-extra": "^8.0.1",
     "google-protobuf": "^3.8.0",
-    "hyperdrive-schemas": "^0.13.0",
+    "hyperdrive-schemas": "^0.14.0",
     "pumpify": "^2.0.0",
     "stream-collector": "^1.0.1",
     "through2-map": "^3.0.0",

@@ -314,81 +314,34 @@ class RemoteHyperdrive {
     }))
   }
 
-  download (path, opts) {
+  download (path, opts, cb) {
+    if (typeof opts === 'function') return this.download(path, null, opts)
     const req = new rpc.drive.messages.DownloadRequest()
 
     req.setId(this.id)
     if (path) req.setPath(path)
-    const detailed = opts && opts.detailed
-    const statsInterval = opts && opts.statsInterval
-
-    if (statsInterval) req.setStatsinterval(statsInterval)
-    req.setDetailed(detailed)
 
     var downloadId = null
 
-    const dl = new EventEmitter()
-    Object.assign(dl, {
-      cancel: (cb) => {
-        if (!downloadId) return cb(new Error('Cancel must be called after the download event has been received.'))
-        return this.undownload(downloadId, cb)
-      }
-    })
-
-    const call = this._client.download(req, toMetadata({ token: this.token }))
-    pump(
-      call,
-      map.obj(handleDownloadResponse),
-      err => {
-        if (err) dl.emit('error', err)
-      }
-    )
-
-    return dl
-
-    function handleDownloadResponse (rsp) {
-      const type = rsp.getType()
-      const id = rsp.getDownloadid()
-      if (id && !downloadId) downloadId = id
-
-      const { totals, byFile } = fromDownloadRsp(rsp)
-
-      switch (type) {
-        case rpc.drive.messages.DownloadResponse.Type.START:
-          dl.emit('start', totals, byFile)
-          break
-
-        case rpc.drive.messages.DownloadResponse.Type.PROGRESS:
-          dl.emit('progress', totals, byFile)
-          break
-
-        case rpc.drive.messages.DownloadResponse.Type.CANCEL:
-          dl.emit('cancel', totals, byFile)
-          break
-
-        case rpc.drive.messages.DownloadResponse.Type.FINISH:
-          dl.emit('finish', totals, byFile)
-          break
-
-        default:
-          dl.emit('error', new Error(`Unknown download response type: ${type}`))
-          break
+    const handler = {
+      destroy: (cb) => {
+        return maybe(cb, new Promise((resolve, reject) => {
+          if (!downloadId) return reject(new Error('Destroy must be called after the download event has been received.'))
+          this.undownload(downloadId, err => {
+            if (err) return reject(err)
+            return resolve()
+          })
+        }))
       }
     }
 
-    function fromDownloadRsp (rsp) {
-      const event = {}
-      event.totals = fromDownloadProgress(rsp.getProgress())
-      if (detailed) {
-        const fileMap = new Map()
-        const files = rsp.getFilesList()
-        for (const fileRsp of files) {
-          fileMap.set(fileRsp.getPath(), fromDownloadProgress(fileRsp.getProgress()))
-        }
-        event.byFile = fileMap
-      }
-      return event
-    }
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.download(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        downloadId = rsp.getDownloadid()
+        return resolve(handler)
+      })
+    }))
   }
 
   undownload (downloadId, cb) {
@@ -762,7 +715,7 @@ class RemoteHyperdrive {
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.fileStats(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        const stats = fromFileStats(rsp.getStats())
+        const stats = fromFileStats(rsp.getStatsMap())
         return resolve(stats)
       })
     }))
