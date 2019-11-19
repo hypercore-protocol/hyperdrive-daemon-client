@@ -197,6 +197,19 @@ class FuseClient {
       })
     }))
   }
+
+  key (mnt, cb) {
+    const req = new rpc.fuse.messages.KeyRequest()
+
+    req.setPath(mnt)
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.key(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve(rsp.getKey())
+      })
+    }))
+  }
 }
 
 // TODO: Implement
