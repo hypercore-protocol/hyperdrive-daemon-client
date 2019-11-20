@@ -2,8 +2,7 @@ const p = require('path')
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
-
-const ROOT_DRIVE_PATH = p.resolve('/hyperdrive')
+const constants = require('../../lib/constants')
 
 exports.command = 'publish [mnt]'
 exports.desc = 'Make a mounted Hyperdrive available to the network.'
@@ -22,8 +21,8 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : ROOT_DRIVE_PATH
-    if (mnt === ROOT_DRIVE_PATH && !argv.root) return onerror(new Error('You must explicitly publish /hyperdrive with the --root flag'))
+    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
+    if (mnt === constants.mountpoint && !argv.root) return onerror(new Error(`You must explicitly publish ${constants.mountpoint} with the --root flag`))
     client.fuse.publish(mnt, (err, rsp) => {
       if (err) return onerror(err)
       return onsuccess(mnt)

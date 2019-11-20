@@ -2,13 +2,14 @@ const p = require('path').posix
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
+const constants = require('../../lib/constants')
 
 exports.command = 'key [mnt]'
 exports.desc = 'Display the key for the drive mounted at the given mountpoint.'
 exports.builder = {}
 
 exports.handler = function (argv) {
-  const mnt = p.resolve(argv.mnt)
+  const mnt = argv.mnt ? p.resolve(argv.mnt) : constants.mountpoint
 
   loadClient((err, client) => {
     if (err) return onerror(err)

@@ -3,11 +3,10 @@ const chalk = require('chalk')
 const datEncoding = require('dat-encoding')
 
 const loadClient = require('../../lib/loader')
-
-const ROOT_DRIVE_PATH = p.resolve('/hyperdrive')
+const constants = require('../../lib/constants')
 
 exports.command = 'mount [mnt] [key]'
-exports.desc = 'Mount a Hyperdrive the specified mountpoint, or /hyperdrive if this is the root drive.'
+exports.desc = `Mount a Hyperdrive the specified mountpoint, or ${constants.mountpoint} if this is the root drive.`
 exports.builder = {
   version: {
     description: 'The version of the drive that will be mounted.',
@@ -32,7 +31,7 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : ROOT_DRIVE_PATH
+    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
     client.fuse.mount(mnt, {
       key: argv.key ? datEncoding.decode(argv.key) : null,
       version: argv.version,
