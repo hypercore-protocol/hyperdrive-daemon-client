@@ -17,9 +17,9 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    client.fuse.key(mnt, (err, key) => {
+    client.fuse.key(mnt, (err, keyAndPath) => {
       if (err) return onerror(err)
-      return onsuccess(key)
+      return onsuccess(keyAndPath.key)
     })
   }
 

@@ -206,7 +206,10 @@ class FuseClient {
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.key(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        return resolve(rsp.getKey())
+        return resolve({
+          key: rsp.getKey(),
+          path: rsp.getPath()
+        })
       })
     }))
   }
