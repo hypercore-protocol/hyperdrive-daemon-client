@@ -631,6 +631,7 @@ class RemoteHyperdrive {
     req.setId(this.id)
     req.setPath(path)
     if (opts.recursive) req.setRecursive(opts.recursive)
+    if (opts.noMounts) req.setNomounts(opts.noMounts)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.readdir(req, toMetadata({ token: this.token }), (err, rsp) => {
