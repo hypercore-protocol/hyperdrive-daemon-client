@@ -18,8 +18,13 @@ exports.builder = {
     type: 'string',
     default: null
   },
-  seed: {
+  publish: {
     description: 'Make the drive available to the network',
+    type: 'boolean',
+    default: false
+  },
+  'force-create': {
+    description: 'Force the creation of a new root drive',
     type: 'boolean',
     default: false
   }
@@ -32,12 +37,14 @@ exports.handler = function (argv) {
 
   function onclient (client) {
     const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
-    if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only mount drives underneath the root drive at ${constants.home}`))
+    if (mnt !== constants.mountpoint && !mnt.startsWith(constants.home)) return onerror(new Error(`You can only mount drives underneath the root drive at ${constants.home}`))
+    // TODO: This is a hack to get around updating the schema. Add a force flag post-beta.
+    if (argv['force-create']) argv.hash = 'force'
     client.fuse.mount(mnt, {
       key: argv.key ? datEncoding.decode(argv.key) : null,
       version: argv.version,
-      hash: argv.hash,
-      seed: argv.seed
+      hash: argv.hash ? Buffer.from(argv.hash) : null,
+      seed: argv.publish
     }, (err, rsp) => {
       if (err) return onerror(err)
       return onsuccess(rsp.path, rsp.mountInfo)

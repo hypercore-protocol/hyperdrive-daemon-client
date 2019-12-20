@@ -15,8 +15,8 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    const mnt = p.resolve(argv.mnt)
-    if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only unmount drives mounted underneath the root drive at ${constants.home}`))
+    const mnt = argv.mnt ? p.resolve(argv.mnt) : constants.mountpoint
+    if (mnt !== constants.mountpoint && !mnt.startsWith(constants.home)) return onerror(new Error(`You can only unmount drives mounted underneath the root drive at ${constants.home}`))
     client.fuse.unmount(argv.mnt, err => {
       if (err) return onerror(err)
       return onsuccess()
