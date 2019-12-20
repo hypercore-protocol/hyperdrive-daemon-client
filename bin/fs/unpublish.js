@@ -5,7 +5,7 @@ const loadClient = require('../../lib/loader')
 const constants = require('../../lib/constants')
 
 exports.command = 'unpublish [mnt]'
-exports.desc = 'Remove a mounted Hyperdrive available from the network.'
+exports.desc = 'Stop advertising a mounted drive.'
 exports.builder = {}
 
 exports.handler = function (argv) {
@@ -16,6 +16,7 @@ exports.handler = function (argv) {
 
   function onclient (client) {
     const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
+    if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only unpublish drives mounted underneath the root drive at ${constants.home}`))
     client.fuse.unpublish(mnt, (err, rsp) => {
       if (err) return onerror(err)
       return onsuccess(mnt)

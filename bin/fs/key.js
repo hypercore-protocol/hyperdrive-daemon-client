@@ -10,6 +10,7 @@ exports.builder = {}
 
 exports.handler = function (argv) {
   const mnt = argv.mnt ? p.resolve(argv.mnt) : constants.mountpoint
+  if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only get the keys of drives mounted underneath the root drive at ${constants.home}`))
 
   loadClient((err, client) => {
     if (err) return onerror(err)

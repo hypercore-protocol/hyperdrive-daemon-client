@@ -6,7 +6,7 @@ const loadClient = require('../../lib/loader')
 const constants = require('../../lib/constants')
 
 exports.command = 'mount [mnt] [key]'
-exports.desc = `Mount a Hyperdrive the specified mountpoint, or ${constants.mountpoint} if this is the root drive.`
+exports.desc = `Mount a drive at the specified mountpoint underneath the root.`
 exports.builder = {
   version: {
     description: 'The version of the drive that will be mounted.',
@@ -32,6 +32,7 @@ exports.handler = function (argv) {
 
   function onclient (client) {
     const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
+    if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only mount drives underneath the root drive at ${constants.home}`))
     client.fuse.mount(mnt, {
       key: argv.key ? datEncoding.decode(argv.key) : null,
       version: argv.version,
