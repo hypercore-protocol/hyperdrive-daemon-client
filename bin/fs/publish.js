@@ -8,7 +8,7 @@ exports.command = 'publish [mnt]'
 exports.desc = 'Make a mounted Hyperdrive available to the network.'
 exports.builder = {
   root: {
-    description: 'Make your root drive (at /hyperdrive) available to the network',
+    description: 'Make your root drive (at ~/Hyperdrive) available to the network',
     type: 'boolean',
     default: false
   }

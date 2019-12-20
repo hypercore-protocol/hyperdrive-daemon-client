@@ -8,7 +8,7 @@ exports.handler = async function (argv) {
   loadClient((err, client) => {
     if (err) return onerror(err)
     client.stop(err => {
-      if (err && err.code !== 13) return onerror(err)
+      if (err && err.code !== 13 && err.code !== 1) return onerror(err)
       return onsuccess()
     })
   })
