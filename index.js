@@ -632,11 +632,16 @@ class RemoteHyperdrive {
     req.setPath(path)
     if (opts.recursive) req.setRecursive(opts.recursive)
     if (opts.noMounts) req.setNomounts(opts.noMounts)
+    if (opts.includeStats) req.setIncludestats(opts.includeStats)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.readdir(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        return resolve(rsp.getFilesList())
+        if (!opts.includeStats) return resolve(rsp.getFilesList())
+        return resolve({
+          names: rsp.getFilesList(),
+          stats: rsp.getStatsList().map(s => fromStat(s))
+        })
       })
     }))
   }
