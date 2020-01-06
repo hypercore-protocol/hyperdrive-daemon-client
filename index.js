@@ -19,6 +19,7 @@ const {
   toStat,
   fromStat,
   toMount,
+  fromMount,
   toChunks,
   fromDiffEntry,
   fromDriveStats,
@@ -637,11 +638,17 @@ class RemoteHyperdrive {
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.readdir(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        if (!opts.includeStats) return resolve(rsp.getFilesList())
-        return resolve({
-          names: rsp.getFilesList(),
-          stats: rsp.getStatsList().map(s => fromStat(s))
-        })
+        const names = rsp.getFilesList()
+        if (!opts.includeStats) return resolve(names)
+        const statsList = rsp.getStatsList()
+        const mountsList = rsp.getMountsList()
+        return resolve(names.map((name, i) => {
+          return {
+            name,
+            stat: fromStat(statsList[i]),
+            mount: fromMount(mountsList[i])
+          }
+        }))
       })
     }))
   }
