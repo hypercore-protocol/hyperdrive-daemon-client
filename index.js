@@ -95,21 +95,6 @@ class MainClient {
     }))
   }
 
-  stop (cb) {
-    const req = new rpc.main.messages.StopRequest()
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this.ready(err => {
-        if (err) return reject(err)
-        this._client.stop(req, toMetadata({ token: this.token }), (err, rsp) => {
-          if (err) return reject(err)
-          // TODO: Response processing?
-          return resolve(rsp)
-        })
-      })
-    }))
-  }
-
   close () {
     if (this.fuse) this.fuse.closeClient()
     if (this.drive) this.drive.closeClient()
