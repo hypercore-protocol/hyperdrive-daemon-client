@@ -630,7 +630,7 @@ class RemoteHyperdrive {
         return resolve(names.map((name, i) => {
           return {
             name,
-            stat: fromStat(statsList[i]),
+            stat: new Stat(fromStat(statsList[i])),
             mount: fromMount(mountsList[i])
           }
         }))
