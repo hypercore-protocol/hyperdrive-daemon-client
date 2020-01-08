@@ -627,11 +627,13 @@ class RemoteHyperdrive {
         if (!opts.includeStats) return resolve(names)
         const statsList = rsp.getStatsList()
         const mountsList = rsp.getMountsList()
+        const innerPathsList = rsp.getInnerpathsList()
         return resolve(names.map((name, i) => {
           return {
             name,
             stat: new Stat(fromStat(statsList[i])),
-            mount: fromMount(mountsList[i])
+            mount: fromMount(mountsList[i]),
+            innerPath: innerPathsList[i]
           }
         }))
       })
