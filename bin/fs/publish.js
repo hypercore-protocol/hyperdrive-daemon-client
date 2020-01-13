@@ -2,6 +2,7 @@ const p = require('path')
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
+const { normalize } = require('../../lib/paths')
 const constants = require('../../lib/constants')
 
 exports.command = 'publish [mnt]'
@@ -21,8 +22,11 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
-    if (mnt === constants.mountpoint && !argv.root) return onerror(new Error(`You must explicitly publish ${constants.mountpoint} with the --root flag`))
+    try {
+      var mnt = normalize(argv.mnt)
+    } catch (err) {
+      return onerror(err)
+    }
     if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only publish drives mounted underneath the root drive at ${constants.home}`))
     client.fuse.publish(mnt, (err, rsp) => {
       if (err) return onerror(err)

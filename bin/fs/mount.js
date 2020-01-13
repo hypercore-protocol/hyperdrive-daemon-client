@@ -3,6 +3,7 @@ const chalk = require('chalk')
 const datEncoding = require('dat-encoding')
 
 const loadClient = require('../../lib/loader')
+const { normalize } = require('../../lib/paths')
 const constants = require('../../lib/constants')
 
 exports.command = 'mount [mnt] [key]'
@@ -36,8 +37,11 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    const mnt = argv.mnt ? p.posix.resolve(argv.mnt) : constants.mountpoint
-    if (mnt !== constants.mountpoint && !mnt.startsWith(constants.home)) return onerror(new Error(`You can only mount drives underneath the root drive at ${constants.home}`))
+    try {
+      var mnt = normalize(argv.mnt)
+    } catch (err) {
+      return onerror(err)
+    }
     // TODO: This is a hack to get around updating the schema. Add a force flag post-beta.
     if (argv['force-create']) argv.hash = 'force'
     client.fuse.mount(mnt, {

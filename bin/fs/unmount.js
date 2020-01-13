@@ -2,6 +2,7 @@ const p = require('path').posix
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
+const { normalize } = require('../../lib/paths')
 const constants = require('../../lib/constants')
 
 exports.command = 'unmount [mnt]'
@@ -15,9 +16,12 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    const mnt = argv.mnt ? p.resolve(argv.mnt) : constants.mountpoint
-    if (mnt !== constants.mountpoint && !mnt.startsWith(constants.home)) return onerror(new Error(`You can only unmount drives mounted underneath the root drive at ${constants.home}`))
-    client.fuse.unmount(argv.mnt, err => {
+    try {
+      var mnt = normalize(argv.mnt)
+    } catch (err) {
+      return onerror(err)
+    }
+    client.fuse.unmount(mnt, err => {
       if (err) return onerror(err)
       return onsuccess()
     })

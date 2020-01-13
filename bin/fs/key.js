@@ -2,6 +2,7 @@ const p = require('path').posix
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
+const { normalize } = require('../../lib/paths')
 const constants = require('../../lib/constants')
 
 exports.command = 'key [mnt]'
@@ -9,8 +10,11 @@ exports.desc = 'Display the key for the drive mounted at the given mountpoint.'
 exports.builder = {}
 
 exports.handler = function (argv) {
-  const mnt = argv.mnt ? p.resolve(argv.mnt) : constants.mountpoint
-  if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only get the keys of drives mounted underneath the root drive at ${constants.home}`))
+  try {
+    var mnt = normalize(argv.mnt)
+  } catch (err) {
+    return onerror(err)
+  }
 
   loadClient((err, client) => {
     if (err) return onerror(err)
