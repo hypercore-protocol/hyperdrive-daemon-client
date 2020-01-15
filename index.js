@@ -54,7 +54,7 @@ class MainClient {
     const self = this
 
     if (this.endpoint && this.token) return process.nextTick(onmetadata)
-    return loadMetadata((err, metadata) => {
+    return loadMetadata(this.opts.storage, (err, metadata) => {
       if (err) {
         err.disconnected = true
         return cb(err)
