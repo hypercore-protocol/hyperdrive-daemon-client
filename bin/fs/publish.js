@@ -27,7 +27,8 @@ exports.handler = function (argv) {
     } catch (err) {
       return onerror(err)
     }
-    if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only publish drives mounted underneath the root drive at ${constants.home}`))
+    if (!mnt.startsWith(constants.mountpoint)) return onerror(new Error(`You can only publish drives mounted underneath the root drive at ${constants.mountpoint}`))
+    if (mnt === constants.mountpoint && !argv.root) return onerror(new Error('If you want to publish your private root drive, use the --root flag. This is for your safety!'))
     client.fuse.publish(mnt, (err, rsp) => {
       if (err) return onerror(err)
       return onsuccess(mnt)

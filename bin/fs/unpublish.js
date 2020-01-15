@@ -21,7 +21,7 @@ exports.handler = function (argv) {
     } catch (err) {
       return onerror(err)
     }
-    if (!mnt.startsWith(constants.home)) return onerror(new Error(`You can only unpublish drives mounted underneath the root drive at ${constants.home}`))
+    if (!mnt.startsWith(constants.mountpoint)) return onerror(new Error(`You can only unpublish drives mounted underneath the root drive at ${constants.mountpoint}`))
     client.fuse.unpublish(mnt, (err, rsp) => {
       if (err) return onerror(err)
       return onsuccess(mnt)
