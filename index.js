@@ -65,8 +65,8 @@ class MainClient {
     })
 
     function onmetadata () {
-      self.fuse = new FuseClient(self.endpoint, self.token)
       self.drive = new DriveClient(self.endpoint, self.token)
+      self.fuse = new FuseClient(self.drive, self.endpoint, self.token)
       self.corestore = new CorestoreClient(self.endpoint, self.token)
 
       self._client = new rpc.main.services.HyperdriveClient(self.endpoint, grpc.credentials.createInsecure())
@@ -102,7 +102,8 @@ class MainClient {
 }
 
 class FuseClient {
-  constructor (endpoint, token) {
+  constructor (driveClient, endpoint, token) {
+    this.driveClient = driveClient
     this.endpoint = endpoint
     this.token = token
     this._client = new rpc.fuse.services.FuseClient(this.endpoint, grpc.credentials.createInsecure())
@@ -130,30 +131,16 @@ class FuseClient {
     }))
   }
 
-  publish (mnt, cb) {
-    const req = new rpc.fuse.messages.PublishRequest()
+  async configureNetwork (mnt, opts = {}, cb) {
+    const self = this
+    return maybe(cb, _configure())
 
-    req.setPath(mnt)
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return reject(err)
-        return resolve()
-      })
-    }))
-  }
-
-  unpublish (mnt, cb) {
-    const req = new rpc.fuse.messages.UnpublishRequest()
-
-    req.setPath(mnt)
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return reject(err)
-        return resolve()
-      })
-    }))
+    async function _configure () {
+      const { key, path } = await self.key(mnt)
+      const drive = await self.driveClient.get({ key })
+      await drive.configureNetwork(opts)
+      await drive.close()
+    }
   }
 
   unmount (mnt, cb) {
@@ -276,26 +263,16 @@ class RemoteHyperdrive {
     })
   }
 
-  publish (cb) {
-    const req = new rpc.drive.messages.PublishDriveRequest()
+  configureNetwork (opts = {}, cb) {
+    const req = new rpc.drive.messages.ConfigureNetworkRequest()
 
     req.setId(this.id)
+    req.setAnnounce(opts.announce)
+    req.setLookup(opts.lookup)
+    req.setRemember(opts.remember !== undefined ? opts.remember : true)
 
     return maybe(cb, new Promise((resolve, reject) => {
-      this._client.publish(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return reject(err)
-        return resolve()
-      })
-    }))
-  }
-
-  unpublish (cb) {
-    const req = new rpc.drive.messages.UnpublishDriveRequest()
-
-    req.setId(this.id)
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this._client.unpublish(req, toMetadata({ token: this.token }), (err, rsp) => {
+      this._client.configureNetwork(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
         return resolve()
       })
