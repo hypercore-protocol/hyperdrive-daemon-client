@@ -21,10 +21,12 @@ const {
   toMount,
   fromMount,
   toChunks,
+  toNetworkConfiguration,
   fromDiffEntry,
   fromDriveStats,
   fromDownloadProgress,
   fromFileStats,
+  fromNetworkConfiguration,
   setMetadata,
 } = require('./lib/common')
 
@@ -267,9 +269,11 @@ class RemoteHyperdrive {
     const req = new rpc.drive.messages.ConfigureNetworkRequest()
 
     req.setId(this.id)
-    req.setAnnounce(opts.announce)
-    req.setLookup(opts.lookup)
-    req.setRemember(opts.remember !== undefined ? opts.remember : true)
+    req.setNetwork(toNetworkConfiguration({
+      announce: !!opts.announce,
+      lookup: !!opts.lookup,
+      remember: opts.remember !== undefined ? opts.remember : true
+    }))
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.configureNetwork(req, toMetadata({ token: this.token }), (err, rsp) => {
@@ -288,7 +292,8 @@ class RemoteHyperdrive {
       this._client.stats(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
         const stats = fromDriveStats(rsp.getStats())
-        return resolve(stats)
+        const network = fromNetworkConfiguration(rsp.getNetwork())
+        return resolve({ stats, network })
       })
     }))
   }
