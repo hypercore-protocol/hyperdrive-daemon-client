@@ -30,6 +30,7 @@ exports.handler = async function (argv) {
     console.log(chalk.green(`  Daemon Version:          ${rsp.daemonVersion}`))
     console.log(chalk.green(`  Client Version:          ${rsp.clientVersion}`))
     console.log(chalk.green(`  Schema Version:          ${rsp.schemaVersion}`))
+    console.log(chalk.green(`  Hyperdrive Version:      ${rsp.hyperdriveVersion}`))
     console.log(chalk.green(`  Fuse Native Version:     ${rsp.fuseNativeVersion}`))
     console.log(chalk.green(`  Hyperdrive Fuse Version: ${rsp.hyperdriveFuseVersion}`))
     console.log()

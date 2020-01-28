@@ -103,6 +103,7 @@ class MainClient {
           daemonVersion: rsp.getDaemonversion(),
           clientVersion: rsp.getClientversion(),
           schemaVersion: rsp.getSchemaversion(),
+          hyperdriveVersion: rsp.getHyperdriveversion(),
           fuseNativeVersion: rsp.getFusenativeversion(),
           hyperdriveFuseVersion: rsp.getHyperdrivefuseversion()
         })
