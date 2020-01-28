@@ -9,7 +9,7 @@ const maybe = require('call-me-maybe')
 const codecs = require('codecs')
 
 const { Writable } = require('@mafintosh/streamx')
-const { Stat } = require('hyperdrive-schemas')
+const { Stat, version: apiVersion } = require('hyperdrive-schemas')
 
 const rpc = require('./lib/rpc.js')
 const { loadMetadata } = require('./lib/metadata')
@@ -78,7 +78,15 @@ class MainClient {
           err.disconnected = true
           return cb(err)
         }
-        return cb(null)
+        self.status((err, statusResponse) => {
+          if (err) return cb(err)
+          if (statusResponse.apiVersion !== apiVersion) {
+            const versionMismatchError = new Error('The client\'s API version is not compabile with the server\'s API version.')
+            versionMismatchError.versionMismatch = true
+            return cb(versionMismatchError)
+          }
+          return cb(null)
+        })
       })
     }
   }
@@ -87,11 +95,16 @@ class MainClient {
     const req = new rpc.main.messages.StatusRequest()
 
     return maybe(cb, new Promise((resolve, reject) => {
-      this.ready(err => {
+      this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
-        this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
-          if (err) return reject(err)
-          return resolve(rsp)
+        return resolve({
+          apiVersion: rsp.getApiversion(),
+          uptime: rsp.getUptime(),
+          daemonVersion: rsp.getDaemonversion(),
+          clientVersion: rsp.getClientversion(),
+          schemaVersion: rsp.getSchemaversion(),
+          fuseNativeVersion: rsp.getFusenativeversion(),
+          hyperdriveFuseVersion: rsp.getHyperdrivefuseversion()
         })
       })
     }))
@@ -740,5 +753,6 @@ function toMetadata (obj) {
 module.exports = {
   HyperdriveClient: MainClient,
   rpc,
-  loadMetadata
+  loadMetadata,
+  apiVersion
 }

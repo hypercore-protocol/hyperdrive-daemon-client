@@ -7,9 +7,9 @@ exports.desc = 'Check the status of the Hyperdrive daemon.'
 exports.handler = async function (argv) {
   loadClient((err, client) => {
     if (err) return onerror(err)
-    client.status(err => {
+    client.status((err, rsp) => {
       if (err) return onerror(err)
-      return onsuccess()
+      return onsuccess(rsp)
     })
   })
 
@@ -23,8 +23,16 @@ exports.handler = async function (argv) {
     process.exit(1)
   }
 
-  function onsuccess () {
-    console.log(chalk.green(`The Hyperdrive daemon is running.`))
+  function onsuccess (rsp) {
+    console.log(chalk.green(`The Hyperdrive daemon is running:`))
+    console.log()
+    console.log(chalk.green(`  API Version:             ${rsp.apiVersion}`))
+    console.log(chalk.green(`  Daemon Version:          ${rsp.daemonVersion}`))
+    console.log(chalk.green(`  Client Version:          ${rsp.clientVersion}`))
+    console.log(chalk.green(`  Schema Version:          ${rsp.schemaVersion}`))
+    console.log(chalk.green(`  Fuse Native Version:     ${rsp.fuseNativeVersion}`))
+    console.log(chalk.green(`  Hyperdrive Fuse Version: ${rsp.hyperdriveFuseVersion}`))
+    console.log()
     process.exit(0)
   }
 }

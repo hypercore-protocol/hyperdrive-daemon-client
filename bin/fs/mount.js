@@ -70,11 +70,11 @@ exports.handler = function (argv) {
     console.log(chalk.green(`  Key:        ${opts.key.toString('hex')} `))
     if (opts.version) console.log(chalk.green(`  Version:    ${opts.version}`))
     if (opts.hash) console.log(chalk.green(`  Hash:       ${opts.hash}`))
-    console.log(chalk.green(`  Seeding:    ${seeding}`))
+    console.log(chalk.green(`  Published:    ${seeding}`))
     console.log()
 
     if (!seeding) {
-      const mntString = mnt === '/hyperdrive --root true' ? '' : mnt
+      const mntString = mnt === '~/Hyperdrive --root true' ? '' : mnt
       console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive fs publish ${mntString}\` `))
     }
     process.exit(0)
