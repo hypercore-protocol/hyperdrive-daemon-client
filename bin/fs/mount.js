@@ -70,7 +70,7 @@ exports.handler = function (argv) {
     console.log(chalk.green(`  Key:        ${opts.key.toString('hex')} `))
     if (opts.version) console.log(chalk.green(`  Version:    ${opts.version}`))
     if (opts.hash) console.log(chalk.green(`  Hash:       ${opts.hash}`))
-    console.log(chalk.green(`  Published:    ${seeding}`))
+    console.log(chalk.green(`  Published:  ${seeding}`))
     console.log()
 
     if (!seeding) {

@@ -7,7 +7,13 @@ const constants = require('../../lib/constants')
 
 exports.command = 'key [mnt]'
 exports.desc = 'Display the key for the drive mounted at the given mountpoint.'
-exports.builder = {}
+exports.builder = {
+  root: {
+    description: 'Show the key of your private root drive.',
+    type: 'boolean',
+    default: false
+  }
+}
 
 exports.handler = function (argv) {
   try {
@@ -24,7 +30,15 @@ exports.handler = function (argv) {
   function onclient (client) {
     client.fuse.key(mnt, (err, keyAndPath) => {
       if (err) return onerror(err)
-      return onsuccess(keyAndPath.key)
+      client.fuse.key(constants.mountpoint, (err, rootKeyAndPath) => {
+        if (keyAndPath.key === rootKeyAndPath.key) {
+          if (argv.root) return onsuccess(rootKeyAndPath.key, true)
+          const err = new Error()
+          err.details = 'You requested the key for your private root drive. To proceed, retry this command with --root (and be careful!).'
+          return onerror(err)
+        }
+        return onsuccess(keyAndPath.key, false)
+      })
     })
   }
 
@@ -34,7 +48,8 @@ exports.handler = function (argv) {
     process.exit(1)
   }
 
-  function onsuccess (key) {
+  function onsuccess (key, root) {
     console.log(chalk.green(key))
+    if (root) console.log(chalk.blue('\nThis is your root drive key. You probably should not share this.'))
   }
 }
