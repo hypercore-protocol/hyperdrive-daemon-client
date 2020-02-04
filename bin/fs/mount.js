@@ -3,7 +3,7 @@ const chalk = require('chalk')
 const datEncoding = require('dat-encoding')
 
 const loadClient = require('../../lib/loader')
-const { normalize } = require('../../lib/paths')
+const { normalize } = require('../../lib/cli')
 const constants = require('../../lib/constants')
 
 exports.command = 'mount [mnt] [key]'
