@@ -1,15 +1,16 @@
-const p = require('path').posix
+const p = require('path')
+const fs = require('fs')
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
 const { normalize, keyForPath } = require('../../lib/cli')
 const constants = require('../../lib/constants')
 
-exports.command = 'key [path]'
-exports.desc = 'Display the key for the drive mounted at the given mountpoint.'
+exports.command = 'stats [path]'
+exports.desc = 'Get the networking stats for the drive mounted at a path.'
 exports.builder = {
   root: {
-    description: 'Show the key of your private root drive.',
+    description: 'Show the networking stats of your private root drive.',
     type: 'boolean',
     default: false
   }
@@ -35,14 +36,16 @@ exports.handler = function (argv) {
     })
   }
 
-  function onerror (err) {
-    console.error(chalk.red(`Could get the drive key for mountpoint: ${path}`))
-    console.error(chalk.red(`${err.details || err}`))
-    process.exit(1)
+  function onsuccess (key, isRoot) {
+    fs.readFile(p.join(constants.mountpoint, 'Network', 'Stats', key, 'networking.json'), { encoding: 'utf8' }, (err, file) => {
+      if (err) return onerror(err)
+      console.log(file)
+    })
   }
 
-  function onsuccess (key, root) {
-    console.log(chalk.green(key))
-    if (root) console.log(chalk.blue('\nThis is your root drive key. You probably should not share this.'))
+  function onerror (err) {
+    console.error(chalk.red('Could not mount the drive:'))
+    console.error(chalk.red(`${err.details || err}`))
+    process.exit(1)
   }
 }

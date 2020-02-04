@@ -2,7 +2,7 @@ const p = require('path')
 const chalk = require('chalk')
 
 const loadClient = require('../../lib/loader')
-const { normalize } = require('../../lib/paths')
+const { normalize, keyForPath } = require('../../lib/cli')
 const constants = require('../../lib/constants')
 
 exports.command = 'publish [mnt]'
@@ -31,6 +31,7 @@ exports.builder = {
 }
 
 exports.handler = function (argv) {
+  let mnt = argv.mnt || process.cwd()
   loadClient((err, client) => {
     if (err) return onerror(err)
     return onclient(client)
@@ -38,19 +39,20 @@ exports.handler = function (argv) {
 
   function onclient (client) {
     try {
-      var mnt = normalize(argv.mnt)
+      mnt = normalize(mnt)
     } catch (err) {
       return onerror(err)
     }
-    if (!mnt.startsWith(constants.mountpoint)) return onerror(new Error(`You can only publish drives mounted underneath the root drive at ${constants.mountpoint}`))
-    if (mnt === constants.mountpoint && !argv.root) return onerror(new Error('If you want to publish your private root drive, use the --root flag. This is for your safety!'))
-    client.fuse.configureNetwork(mnt, {
-      lookup: argv.lookup,
-      announce: argv.announce,
-      remember: argv.remember
-    }, (err, rsp) => {
+    keyForPath(client, mnt, argv.root, (err, key, isRoot) => {
       if (err) return onerror(err)
-      return onsuccess(mnt)
+      client.fuse.configureNetwork(mnt, {
+        lookup: argv.lookup,
+        announce: argv.announce,
+        remember: argv.remember
+      }, (err, rsp) => {
+        if (err) return onerror(err)
+        return onsuccess(mnt, isRoot)
+      })
     })
   }
 
