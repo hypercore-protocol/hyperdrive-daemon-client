@@ -297,10 +297,12 @@ class RemoteHyperdrive {
     }))
   }
 
-  stats (cb) {
+  stats (opts, cb) {
+    if (typeof opts === 'function') return this.stats(null, opts)
     const req = new rpc.drive.messages.DriveStatsRequest()
 
     req.setId(this.id)
+    if (opts && opts.recursive) req.setRecursive(opts.recursive)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.stats(req, toMetadata({ token: this.token }), (err, rsp) => {
