@@ -8,27 +8,33 @@ const constants = require('../../lib/constants')
 
 exports.command = 'mount [mnt] [key]'
 exports.desc = `Mount a drive at the specified mountpoint underneath the root.`
-exports.builder = {
-  version: {
-    description: 'The version of the drive that will be mounted.',
-    type: 'number',
-    default: null
-  },
-  hash: {
-    description: 'The root hash of the drive that will be mounted.',
-    type: 'string',
-    default: null
-  },
-  publish: {
-    description: 'Make the drive available to the network',
-    type: 'boolean',
-    default: false
-  },
-  'force-create': {
-    description: 'Force the creation of a new root drive',
-    type: 'boolean',
-    default: false
-  }
+exports.builder = function (yargs) {
+  return yargs
+    .positional('mnt', {
+      describe: 'The desired mountpoint (~/Hyperdrive by default)',
+      type: 'string',
+    })
+    .positional('key', {
+      describe: 'The key of the drive to mount (will create a new drive if not specified)',
+      type: 'string'
+    })
+    .option('checkout', {
+      describe: 'The checkout version of the drive that will be mounted.',
+      type: 'number',
+      default: null
+    })
+    .option('hash', {
+      describe: 'The root hash of the drive that will be mounted.',
+      type: 'string',
+      default: null
+    })
+    .option('force-create', {
+      describe: 'Force the creation of a new root drive',
+      type: 'boolean',
+      default: false
+    })
+    .help()
+    .argv
 }
 exports.handler = function (argv) {
   loadClient((err, client) => {
@@ -46,7 +52,7 @@ exports.handler = function (argv) {
     if (argv['force-create']) argv.hash = 'force'
     client.fuse.mount(mnt, {
       key: argv.key ? datEncoding.decode(argv.key) : null,
-      version: argv.version,
+      version: argv.checkout,
       hash: argv.hash ? Buffer.from(argv.hash) : null,
       seed: argv.publish
     }, (err, rsp) => {

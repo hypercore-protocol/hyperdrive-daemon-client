@@ -44,7 +44,7 @@ exports.handler = function (argv) {
   }
 
   function onerror (err) {
-    console.error(chalk.red('Could not mount the drive:'))
+    console.error(chalk.red('Could not get the drive stats:'))
     console.error(chalk.red(`${err.details || err}`))
     process.exit(1)
   }
