@@ -105,7 +105,9 @@ class MainClient {
           schemaVersion: rsp.getSchemaversion(),
           hyperdriveVersion: rsp.getHyperdriveversion(),
           fuseNativeVersion: rsp.getFusenativeversion(),
-          hyperdriveFuseVersion: rsp.getHyperdrivefuseversion()
+          hyperdriveFuseVersion: rsp.getHyperdrivefuseversion(),
+          holepunchable: rsp.getHolepunchable(),
+          remoteAddress: rsp.getRemoteaddress()
         })
       })
     }))

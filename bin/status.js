@@ -38,8 +38,11 @@ exports.handler = async function (argv) {
     console.log(chalk.green(`  Hyperdrive Version:      ${rsp.hyperdriveVersion}`))
     console.log(chalk.green(`  Fuse Native Version:     ${rsp.fuseNativeVersion}`))
     console.log(chalk.green(`  Hyperdrive Fuse Version: ${rsp.hyperdriveFuseVersion}`))
-    console.log(chalk.green(`  Uptime:                  ${runningTime(rsp.uptime)}`))
     console.log()
+    console.log(chalk.green(`  Holepunchable:           ${rsp.holepunchable}`))
+    console.log(chalk.green(`  Remote Address:          ${rsp.remoteAddress}`))
+    console.log()
+    console.log(chalk.green(`  Uptime:                  ${runningTime(rsp.uptime)}`))
     process.exit(0)
   }
 
