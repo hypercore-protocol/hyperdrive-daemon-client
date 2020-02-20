@@ -50,7 +50,7 @@ Each of the following is not a Hyperdrive method, but applies only to a single s
 ##### `await drive.close()`
 Close a remote drive's underlying session.
 
-_Note: This currently does not close the actual Hyperdrive in the daemon. _
+If there are no sessions open for a drive, and it isn't being used by FUSE, then the drive will be closed inside the daemon. Remember to close sessions, else you'll leak memory!
 
 ##### `const stats = await drive.stats()`
 Get networking statistics for a drive.
@@ -60,11 +60,17 @@ The returned statistics will be a list of stats per-mount, with top-level statis
 [{ path: '/', metadata: { ... }, content: { ... } }, { path: '/a', metadata: { ... }, content: { ... } }, ... ]
 ```
 
-##### `await drive.publish()`
-Advertise a drive to the discovery network.
+##### `await drive.configureNetwork(opts = {})`
+Change a drive's networking configuration.
 
-##### `await drive.unpublish()`
-Stop advertising a drive to the discovery network.
+Options include:
+```js
+{
+  announce: true, // Announce the drive's discovery key.
+  lookup: true,   // Look up peers that are announcing the drive's discovery key.
+  remember: true  // Save these settings so that they'll apply across daemon restarts.
+}
+```
 
 #### Hyperdrive Methods
 The client currently only supports a subset of the Hyperdrive API. We're actively working on extending this (targeting complete parity)! Each method's options mirror those in the [hyperdrive module](https://github.com/mafintosh/hyperdrive).
@@ -84,6 +90,15 @@ Method arguments take the same form as those in Hyperdrive. The following method
 9. `drive.watch(path, function onwatch () {})`
 10. `drive.mkdir(dirName, opts, cb(err)`
 11. `drive.rmdir(dirName, cb(err)`
+12. `drive.unlink(path, cb(err))`
+13. `drive.symlink(target, linkname, cb(err))`
+14. `drive.version(cb(err, version))`
+15. `drive.download(path, opts, cb)`
+16. `drive.createDiffStream(other, prefix)`
+17. `drive.updateMetadata(path, metadata, cb(err))`
+18. `drive.deleteMetadata(path, metadata, cb(err))`
+19. `drive.fileStats(name, cb(err, stats))`
+20. `drive.checkout(version)` // Returns a new `RemoteHyperdrive` instance for the checkout.
 
 ### FUSE
 The client library also provides programmatic access to the daemon's FUSE interface. You can mount/unmount your root drive, or mount and share subdrives:
