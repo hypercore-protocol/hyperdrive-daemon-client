@@ -105,7 +105,7 @@ The client library also provides programmatic access to the daemon's FUSE interf
 
 ##### `client.fuse.mount(mnt, opts, cb)`
 Mount either the root drive (if `/mnt` is not specified), or a subdirectory within the root drive.
-- `mnt`: The mountpoint of the drive (currently enforced to be `/hyperdrive` if it's the root drive, and a subdirectory within `/hyperdrive/home` otherwise.
+- `mnt`: The mountpoint of the drive (currently enforced to be `~/Hyperdrive` if it's the root drive, and a subdirectory within `~/Hyperdrive` otherwise.
 - `opts`: Hyperdrive mount options (identical to those in Hyperdrive).
 
 ##### `client.fuse.unmount(mnt, cb)`
