@@ -3,7 +3,7 @@ const fs = require('fs')
 const chalk = require('chalk')
 
 const loadClient = require('../lib/loader')
-const { normalize, keyForPath } = require('../lib/cli')
+const { normalize, infoForPath } = require('../lib/cli')
 const constants = require('../lib/constants')
 
 exports.command = 'stats [path]'
@@ -30,9 +30,9 @@ exports.handler = function (argv) {
   })
 
   function onclient (client) {
-    keyForPath(client, path, argv.root, (err, key, isRoot) => {
+    infoForPath(client, path, argv.root, (err, info, isRoot) => {
       if (err) return onerror(err)
-      return onsuccess(key, isRoot)
+      return onsuccess(info.key, isRoot)
     })
   }
 
