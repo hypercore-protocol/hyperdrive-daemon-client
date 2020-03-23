@@ -1,11 +1,11 @@
 const p = require('path').posix
 const chalk = require('chalk')
 
-const loadClient = require('../../lib/loader')
-const { normalize } = require('../../lib/cli/')
-const constants = require('../../lib/constants')
+const loadClient = require('../lib/loader')
+const { normalize } = require('../lib/cli/')
+const constants = require('../lib/constants')
 
-exports.command = 'unmount [mnt]'
+exports.command = 'unmount [path]'
 exports.desc = 'Unmount a drive. The root drive will be unmounted if a mountpoint is not specified.'
 exports.builder = {}
 
@@ -17,7 +17,7 @@ exports.handler = function (argv) {
 
   function onclient (client) {
     try {
-      var mnt = normalize(argv.mnt)
+      var mnt = normalize(argv.path)
     } catch (err) {
       return onerror(err)
     }

@@ -1,12 +1,13 @@
 const p = require('path')
 const chalk = require('chalk')
+const ora = require('ora')
 
-const loadClient = require('../../lib/loader')
-const { normalize, keyForPath } = require('../../lib/cli')
-const constants = require('../../lib/constants')
+const loadClient = require('../lib/loader')
+const { normalize, infoForPath } = require('../lib/cli')
+const constants = require('../lib/constants')
 
-exports.command = 'publish [mnt]'
-exports.desc = 'Advertise a Hyperdrive to the network.'
+exports.command = 'seed [path]'
+exports.desc = 'Seed a Hyperdrive on the network.'
 exports.builder = {
   root: {
     description: 'Make your root drive (at ~/Hyperdrive) available to the network',
@@ -31,7 +32,8 @@ exports.builder = {
 }
 
 exports.handler = function (argv) {
-  let mnt = argv.mnt || process.cwd()
+  let mnt = argv.path || process.cwd()
+  var spinner = ora(chalk.blue('Joining the network (might take a while to announce)...'))
   loadClient((err, client) => {
     if (err) return onerror(err)
     return onclient(client)
@@ -43,7 +45,8 @@ exports.handler = function (argv) {
     } catch (err) {
       return onerror(err)
     }
-    keyForPath(client, mnt, argv.root, (err, key, isRoot) => {
+    spinner.start()
+    infoForPath(client, mnt, argv.root, (err, info, isRoot) => {
       if (err) return onerror(err)
       client.fuse.configureNetwork(mnt, {
         lookup: argv.lookup,
@@ -57,13 +60,13 @@ exports.handler = function (argv) {
   }
 
   function onerror (err) {
-    console.error(chalk.red('Could not publish the drive:'))
+    spinner.fail(chalk.red('Could not seed the drive:'))
     console.error(chalk.red(`${err.details || err}`))
     process.exit(1)
   }
 
   function onsuccess (mnt) {
-    console.log(chalk.green(`Published the drive mounted at ${mnt}`))
+    spinner.succeed(chalk.green(`Seeding the drive mounted at ${mnt}`))
     process.exit(0)
   }
 }

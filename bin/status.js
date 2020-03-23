@@ -42,6 +42,9 @@ exports.handler = async function (argv) {
     console.log(chalk.green(`  Holepunchable:           ${rsp.holepunchable}`))
     console.log(chalk.green(`  Remote Address:          ${rsp.remoteAddress}`))
     console.log()
+    console.log(chalk.green(`  Fuse Available:          ${rsp.fuseAvailable}`))
+    console.log(chalk.green(`  Fuse Configured:         ${rsp.fuseConfigured}`))
+    console.log()
     console.log(chalk.green(`  Uptime:                  ${runningTime(rsp.uptime)}`))
     process.exit(0)
   }

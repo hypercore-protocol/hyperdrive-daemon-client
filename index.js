@@ -28,6 +28,7 @@ const {
   fromFileStats,
   fromNetworkConfiguration,
   setMetadata,
+  fromDriveInfo
 } = require('./lib/common')
 
 class MainClient {
@@ -154,7 +155,7 @@ class FuseClient {
     return maybe(cb, _configure())
 
     async function _configure () {
-      const { key, path } = await self.key(mnt)
+      const { key, path } = await self.info(mnt)
       const drive = await self.driveClient.get({ key })
       await drive.configureNetwork(opts)
       await drive.close()
@@ -189,16 +190,18 @@ class FuseClient {
     }))
   }
 
-  key (mnt, cb) {
-    const req = new rpc.fuse.messages.KeyRequest()
+  info (mnt, cb) {
+    const req = new rpc.fuse.messages.InfoRequest()
 
     req.setPath(mnt)
 
     return maybe(cb, new Promise((resolve, reject) => {
-      this._client.key(req, toMetadata({ token: this.token }), (err, rsp) => {
+      this._client.info(req, toMetadata({ token: this.token }), (err, rsp) => {
         if (err) return reject(err)
         return resolve({
           key: rsp.getKey(),
+          mountPath: rsp.getMountpath(),
+          writable: rsp.getWritable(),
           path: rsp.getPath()
         })
       })

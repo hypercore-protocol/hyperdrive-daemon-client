@@ -2,9 +2,9 @@ const p = require('path')
 const fs = require('fs')
 const chalk = require('chalk')
 
-const loadClient = require('../../lib/loader')
-const { normalize, keyForPath } = require('../../lib/cli')
-const constants = require('../../lib/constants')
+const loadClient = require('../lib/loader')
+const { normalize, keyForPath } = require('../lib/cli')
+const constants = require('../lib/constants')
 
 exports.command = 'stats [path]'
 exports.desc = 'Get the networking stats for the drive mounted at a path.'
