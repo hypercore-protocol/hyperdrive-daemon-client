@@ -108,7 +108,9 @@ class MainClient {
           fuseNativeVersion: rsp.getFusenativeversion(),
           hyperdriveFuseVersion: rsp.getHyperdrivefuseversion(),
           holepunchable: rsp.getHolepunchable(),
-          remoteAddress: rsp.getRemoteaddress()
+          remoteAddress: rsp.getRemoteaddress(),
+          fuseConfigured: rsp.getFuseconfigured(),
+          fuseAvailable: rsp.getFuseavailable()
         })
       })
     }))
@@ -172,20 +174,6 @@ class FuseClient {
         if (err) return reject(err)
         // TODO: Response processing?
         return resolve()
-      })
-    }))
-  }
-
-  status (cb) {
-    const req = new rpc.fuse.messages.FuseStatusRequest()
-
-    return maybe(cb, new Promise((resolve, reject) => {
-      this._client.status(req, toMetadata({ token: this.token }), (err, rsp) => {
-        if (err) return reject(err)
-        return resolve({
-          available: rsp.getAvailable(),
-          configured: rsp.getConfigured()
-        })
       })
     }))
   }
