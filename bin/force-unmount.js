@@ -1,7 +1,7 @@
 const os = require('os')
 const { execSync } = require('child_process')
 
-const constants = require('../../lib/constants')
+const constants = require('../lib/constants')
 
 exports.command = 'force-unmount'
 exports.desc = 'Forcibly unmount the root filesystem (useful if it was not cleanly unmounted).'

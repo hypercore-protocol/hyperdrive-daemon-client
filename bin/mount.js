@@ -1,17 +1,18 @@
 const p = require('path')
 const chalk = require('chalk')
 const datEncoding = require('dat-encoding')
+const ora = require('ora')
 
-const loadClient = require('../../lib/loader')
-const { normalize } = require('../../lib/cli')
-const constants = require('../../lib/constants')
+const loadClient = require('../lib/loader')
+const { normalize } = require('../lib/cli')
+const constants = require('../lib/constants')
 
-exports.command = 'mount [mnt] [key]'
+exports.command = 'mount [path] [key]'
 exports.desc = `Mount a drive at the specified mountpoint underneath the root.`
 exports.builder = function (yargs) {
   return yargs
-    .positional('mnt', {
-      describe: 'The desired mountpoint (~/Hyperdrive by default)',
+    .positional('path', {
+      describe: 'The desired mountpoint (must be underneath ~/Hyperdrive)',
       type: 'string',
     })
     .positional('key', {
@@ -33,10 +34,16 @@ exports.builder = function (yargs) {
       type: 'boolean',
       default: false
     })
+    .option('seed', {
+      describe: 'Seed the new drive on the Hyperdrive network',
+      type: 'boolean',
+      default: true
+    })
     .help()
     .argv
 }
 exports.handler = function (argv) {
+  var spinner = ora(chalk.blue('Mounting your drive (if seeding, this might take a while to announce)...'))
   loadClient((err, client) => {
     if (err) return onerror(err)
     return onclient(client)
@@ -44,17 +51,18 @@ exports.handler = function (argv) {
 
   function onclient (client) {
     try {
-      var mnt = normalize(argv.mnt)
+      var mnt = normalize(argv.path)
     } catch (err) {
       return onerror(err)
     }
     // TODO: This is a hack to get around updating the schema. Add a force flag post-beta.
     if (argv['force-create']) argv.hash = 'force'
+    spinner.start()
     client.fuse.mount(mnt, {
       key: argv.key ? datEncoding.decode(argv.key) : null,
       version: argv.checkout,
       hash: argv.hash ? Buffer.from(argv.hash) : null,
-      seed: argv.publish
+      seed: argv.seed
     }, (err, rsp) => {
       if (err) return onerror(err)
       return onsuccess(rsp.path, rsp.mountInfo)
@@ -62,27 +70,28 @@ exports.handler = function (argv) {
   }
 
   function onerror (err) {
-    console.error(chalk.red('Could not mount the drive:'))
+    spinner.fail(chalk.red('Could not mount the drive:'))
     console.error(chalk.red(`${err.details || err}`))
     process.exit(1)
   }
 
   function onsuccess (mnt, opts) {
-    const seeding = !!argv.key
+    const seeding = !!opts.seed
 
-    console.log(chalk.green('Mounted a drive with the following info:'))
+    spinner.succeed(chalk.green('Mounted a drive with the following info:'))
     console.log()
-    console.log(chalk.green(`  Mountpoint: ${mnt} `))
-    console.log(chalk.green(`  Key:        ${opts.key.toString('hex')} `))
+    console.log(chalk.green(`  Path: ${mnt} `))
+    console.log(chalk.green(`  Key:  ${opts.key.toString('hex')} `))
     if (opts.version) console.log(chalk.green(`  Version:    ${opts.version}`))
-    if (opts.hash) console.log(chalk.green(`  Hash:       ${opts.hash}`))
-    console.log(chalk.green(`  Published:  ${seeding}`))
-    console.log()
+    if (opts.hash) console.log(chalk.green(`  Hash:  ${opts.hash}`))
+    console.log(chalk.green(`  Seeding: ${seeding}`))
 
     if (!seeding) {
       const mntString = mnt === '~/Hyperdrive --root true' ? '' : mnt
-      console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive fs publish ${mntString}\` `))
+      console.log()
+      console.log(chalk.green(`This drive is private by default. To publish it, run \`hyperdrive seed ${mntString}\` `))
     }
+
     process.exit(0)
   }
 }
