@@ -9,7 +9,8 @@ class SeedCommand extends DaemonCommand {
   static description = 'Seed a Hyperdrive on the network.'
   static args = [
     DaemonCommand.drivePathArg({
-      required: false
+      required: false,
+      default: process.cwd()
     })
   ]
   static flags = {

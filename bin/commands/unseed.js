@@ -9,7 +9,8 @@ class UnseedCommand extends DaemonCommand {
   static args = [
     DaemonCommand.drivePathArg({
       required: false,
-      description: 'The path to the drive that should be unseeded.'
+      description: 'The path to the drive that should be unseeded.',
+      default: process.cwd()
     })
   ]
   static flags = {

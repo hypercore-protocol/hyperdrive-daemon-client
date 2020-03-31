@@ -10,7 +10,8 @@ class StatsCommand extends DaemonCommand {
   static description = 'Get the networking stats for the drive mounted at a path.'
   static args = [
     DaemonCommand.drivePathArg({
-      required: false
+      required: true,
+      default: process.cwd()
     })
   ]
   static flags = {
@@ -28,9 +29,10 @@ class StatsCommand extends DaemonCommand {
   async run () {
     const { flags, args } = this.parse(StatsCommand)
     await super.run()
+    console.log('args here:', args)
 
     var contents
-    var key = flags.key
+    var key = flags.key && flags.key.toString('hex')
     try {
       if (!key) {
         ({ key } = await this.infoForPath(args.path))
