@@ -22,7 +22,7 @@ class InfoCommand extends DaemonCommand {
     const { args, flags } = this.parse(InfoCommand)
     await super.run()
     try {
-      const info = await this.infoForPath(args.path, args.root)
+      const info = await this.infoForPath(args.path, flags.root)
       const isMount = !info.mountPath
       const parentMount = !isMount ? args.path.slice(0, args.path.length - info.mountPath.length) : ''
       const parentInfo = !isMount ? `(the parent mount is ${parentMount})` : ''
