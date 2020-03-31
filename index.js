@@ -42,54 +42,52 @@ class MainClient {
     this.drive = null
     this._client = null
 
-    this._readyOnce = thunky(this._ready.bind(this))
+    this._readyOnce = null
     this.ready = (cb) => {
-      return maybe(cb, new Promise((resolve, reject) => {
-        this._readyOnce(err => {
-          if (err) return reject(err)
-          return resolve()
-        })
-      }))
+      if (!this._readyOnce) this._readyOnce = this._ready()
+      return maybe(cb, this._readyOnce)
     }
   }
 
-  _ready (cb) {
+  async _ready () {
     const self = this
 
-    if (this.endpoint && this.token) return process.nextTick(onmetadata)
-    return loadMetadata(this.opts.storage, (err, metadata) => {
-      if (err) {
-        err.disconnected = true
-        return cb(err)
-      }
-      this.endpoint = this.endpoint || metadata.endpoint
-      this.token = this.token || metadata.token
-      return onmetadata()
-    })
-
-    function onmetadata () {
-      self.drive = new DriveClient(self.endpoint, self.token)
-      self.fuse = new FuseClient(self.drive, self.endpoint, self.token)
-      self.corestore = new CorestoreClient(self.endpoint, self.token)
-
-      self._client = new rpc.main.services.HyperdriveClient(self.endpoint, grpc.credentials.createInsecure())
-      // TODO: Determine how long to wait for connection.
-      self._client.waitForReady(Date.now() + (self.opts.connectionTimeout || 500), err => {
+    if (!this.endpoint || !this.token) {
+      try {
+        var metadata = await loadMetadata(this.opts.storage)
+        this.endpoint = this.endpoint || metadata.endpoint
+        this.token = this.token || metadata.token
+      } catch (err) {
         if (err) {
           err.disconnected = true
-          return cb(err)
+          throw err
         }
-        self.status((err, statusResponse) => {
+      }
+    }
+
+    this.drive = new DriveClient(this.endpoint, this.token)
+    this.fuse = new FuseClient(this.drive, this.endpoint, this.token)
+    this.corestore = new CorestoreClient(this.endpoint, this.token)
+
+    this._client = new rpc.main.services.HyperdriveClient(this.endpoint, grpc.credentials.createInsecure())
+    // TODO: Determine how long to wait for connection.
+    return new Promise((resolve, reject) => {
+      this._client.waitForReady(Date.now() + (this.opts.connectionTimeout || 500), err => {
+        if (err) {
+          err.disconnected = true
+          return reject(err)
+        }
+        this.status((err, statusResponse) => {
           if (err) return cb(err)
           if (statusResponse.apiVersion !== apiVersion) {
             const versionMismatchError = new Error('The client\'s API version is not compabile with the server\'s API version.')
             versionMismatchError.versionMismatch = true
-            return cb(versionMismatchError)
+            return reject(versionMismatchError)
           }
-          return cb(null)
+          return resolve(this)
         })
       })
-    }
+    })
   }
 
   status (cb) {
@@ -233,6 +231,22 @@ class DriveClient {
         if (err) return reject(err)
         const statsList = rsp.getStatsList().map(stat => fromDriveStats(stat))
         return resolve(statsList)
+      })
+    }))
+  }
+
+  allNetworkConfigurations (cb) {
+    const req = new rpc.drive.messages.NetworkConfigurationsRequest()
+
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.allNetworkConfigurations(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        const configMap = new Map(rsp.getConfigurationsList().map(rawConfig => {
+          const configAndKey = fromNetworkConfiguration(rawConfig)
+          const { key, ...networkConfig } = configAndKey
+          return [configAndKey.key.toString('hex'), networkConfig]
+        }))
+        return resolve(configMap)
       })
     }))
   }

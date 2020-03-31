@@ -1,28 +1,39 @@
-const chalk = require('chalk')
 const fs = require('fs')
-const loadClient = require('../../lib/loader')
-const { storage } = require('../../lib/constants')
 const path = require('path')
+const { Command } = require('@oclif/command')
 
-exports.command = 'clear'
-exports.desc = 'Removes all readonly data from disk'
-exports.handler = async function (argv) {
-  loadClient((err) => {
-    if (!err) {
-      console.error(chalk.red('The Hyperdrive *must* not be running'))
-      process.exit(1)
+const { storage } = require('../../../lib/constants')
+const { HyperdriveClient } = require('../../..')
+
+class DebugClearCommand extends Command {
+  static usage = 'clear'
+  static description = 'Removes all readonly data from disk'
+
+  async run () {
+    const self = this
+
+    try {
+      const client = new HyperdriveClient()
+      await client.ready()
+      await client.status()
+      console.error('The Hyperdrive *must* not be running')
+    } catch (err) {
+      cleanup()
     }
 
-    let cnt = 0
-    for (const p of listReadonly()) {
-      rmFeed(p)
-      cnt++
+    function cleanup () {
+      let cnt = 0
+      for (const p of listReadonly()) {
+        rmFeed(p)
+        cnt++
+      }
+      console.log('Removed ' + cnt + ' readonly feed(s)')
+      self.exit()
     }
-
-    console.log('Removed ' + cnt + ' readonly feed(s)')
-    process.exit(0)
-  })
+  }
 }
+
+module.exports = DebugClearCommand
 
 function rmFeed (p) {
   rm('bitfield')
@@ -38,7 +49,6 @@ function rmFeed (p) {
     }
   }
 }
-
 
 function listReadonly () {
   const all = []
