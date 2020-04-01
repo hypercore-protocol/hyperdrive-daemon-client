@@ -195,7 +195,6 @@ class FuseClient {
   }
 }
 
-// TODO: Implement
 class DriveClient {
   constructor (endpoint, token) {
     this.endpoint = endpoint
@@ -223,8 +222,11 @@ class DriveClient {
     }))
   }
 
-  allStats (cb) {
+  allStats (opts, cb) {
+    if (typeof opts === 'function') return this.stats(null, opts)
     const req = new rpc.drive.messages.StatsRequest()
+
+    if (opts && opts.networkingOnly) req.setNetworkingonly(true)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.allStats(req, toMetadata({ token: this.token }), (err, rsp) => {
@@ -309,7 +311,8 @@ class RemoteHyperdrive {
     const req = new rpc.drive.messages.DriveStatsRequest()
 
     req.setId(this.id)
-    if (opts && opts.recursive) req.setRecursive(opts.recursive)
+    if (opts && opts.recursive) req.setRecursive(true)
+    if (opts && opts.networkingOnly) req.setNetworkingonly(true)
 
     return maybe(cb, new Promise((resolve, reject) => {
       this._client.stats(req, toMetadata({ token: this.token }), (err, rsp) => {
