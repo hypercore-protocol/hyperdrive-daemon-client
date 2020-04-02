@@ -78,7 +78,7 @@ class MainClient {
           return reject(err)
         }
         this.status((err, statusResponse) => {
-          if (err) return cb(err)
+          if (err) return reject(err)
           if (statusResponse.apiVersion !== apiVersion) {
             const versionMismatchError = new Error('The client\'s API version is not compabile with the server\'s API version.')
             versionMismatchError.versionMismatch = true
