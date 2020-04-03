@@ -29,13 +29,12 @@ class StatsCommand extends DaemonCommand {
   async run () {
     const { flags, args } = this.parse(StatsCommand)
     await super.run()
-    console.log('args here:', args)
 
     var contents
     var key = flags.key && flags.key.toString('hex')
     try {
       if (!key) {
-        ({ key } = await this.infoForPath(args.path))
+        ({ key } = await this.infoForPath(args.path, flags.root))
       }
       contents = await fs.readFile(p.join(constants.mountpoint, 'Network', 'Stats', key, 'networking.json'), { encoding: 'utf8' })
       console.log(contents)
