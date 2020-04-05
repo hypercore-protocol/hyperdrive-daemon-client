@@ -33,7 +33,6 @@
   "homepage": "https://github.com/andrewosh/hyperdrive-daemon-client#readme",
   "dependencies": {
     "@grpc/grpc-js": "^0.5.1",
-    "@mafintosh/streamx": "^1.1.0",
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.14.0",
     "@oclif/plugin-autocomplete": "^0.1.5",
@@ -49,8 +48,8 @@
     "ora": "^4.0.3",
     "pumpify": "^2.0.0",
     "stream-collector": "^1.0.1",
-    "through2-map": "^3.0.0",
-    "thunky": "^1.0.3"
+    "streamx": "^2.6.0",
+    "through2-map": "^3.0.0"
   },
   "devDependencies": {
     "grpc-tools": "^1.7.3",
