@@ -87,7 +87,8 @@ class MainClient {
           holepunchable: rsp.getHolepunchable(),
           remoteAddress: rsp.getRemoteaddress(),
           fuseConfigured: rsp.getFuseconfigured(),
-          fuseAvailable: rsp.getFuseavailable()
+          fuseAvailable: rsp.getFuseavailable(),
+          noiseKey: Buffer.from(rsp.getNoisekey())
         })
       })
     }))
