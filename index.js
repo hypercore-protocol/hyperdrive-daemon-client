@@ -6,6 +6,7 @@ const rpc = require('./lib/rpc')
 const DriveClient = require('./lib/clients/drive')
 const FuseClient = require('./lib/clients/fuse')
 const PeersocketsClient = require('./lib/clients/peersockets')
+const PeersClient = require('./lib/clients/peers')
 const { main: { messages, services }} = rpc
 const { toRPCMetadata: toMetadata } = require('./lib/common')
 const { loadMetadata } = require('./lib/metadata')
@@ -20,6 +21,7 @@ class MainClient {
     this.fuse = null
     this.drive = null
     this.peersockets = null
+    this.peers = null
 
     this._client = null
     this._readyOnce = null
@@ -48,6 +50,7 @@ class MainClient {
     this.drive = new DriveClient(this.endpoint, this.token)
     this.fuse = new FuseClient(this.drive, this.endpoint, this.token)
     this.peersockets = new PeersocketsClient(this.endpoint, this.token)
+    this.peers = new PeersClient(this.endpoint, this.token)
 
     this._client = new services.HyperdriveClient(this.endpoint, grpc.credentials.createInsecure())
     // TODO: Determine how long to wait for connection.
@@ -98,6 +101,7 @@ class MainClient {
     if (this.fuse) this.fuse.closeClient()
     if (this.drive) this.drive.closeClient()
     if (this.peersockets) this.peersockets.closeClient()
+    if (this.peers) this.peers.closeClient()
   }
 }
 
