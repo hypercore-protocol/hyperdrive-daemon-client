@@ -1,9 +1,11 @@
+const repl = require('repl')
 const grpc = require('@grpc/grpc-js')
 const maybe = require('call-me-maybe')
 const { version: apiVersion } = require('hyperdrive-schemas')
 
 const rpc = require('./lib/rpc')
 const DriveClient = require('./lib/clients/drive')
+const DebugClient = require('./lib/clients/debug')
 const FuseClient = require('./lib/clients/fuse')
 const PeersocketsClient = require('./lib/clients/peersockets')
 const PeersClient = require('./lib/clients/peers')
@@ -21,6 +23,7 @@ class MainClient {
     this.fuse = null
     this.drive = null
     this.peersockets = null
+    this.debug = null
     this.peers = null
 
     this._client = null
@@ -50,6 +53,7 @@ class MainClient {
     this.drive = new DriveClient(this.endpoint, this.token)
     this.fuse = new FuseClient(this.drive, this.endpoint, this.token)
     this.peersockets = new PeersocketsClient(this.endpoint, this.token)
+    this.debug = new DebugClient(this.endpoint, this.token)
     this.peers = new PeersClient(this.endpoint, this.token)
 
     this._client = new services.HyperdriveClient(this.endpoint, grpc.credentials.createInsecure())
@@ -101,6 +105,7 @@ class MainClient {
     if (this.fuse) this.fuse.closeClient()
     if (this.drive) this.drive.closeClient()
     if (this.peersockets) this.peersockets.closeClient()
+    if (this.debug) this.debug.closeClient()
     if (this.peers) this.peers.closeClient()
   }
 }
