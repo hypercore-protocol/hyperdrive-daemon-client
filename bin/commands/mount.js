@@ -31,16 +31,19 @@ class MountCommand extends DaemonCommand {
   async run () {
     const { flags, args } = this.parse(MountCommand)
     await super.run()
-
     const spinner = ora('Mounting your drive (if seeding, this might take a while to announce)...')
-
     try {
       const { path, mountInfo } = await this.client.fuse.mount(args.path, {
         key: args.key ? args.key : null,
         version: flags.version,
-        seed: flags.seed
       })
-      const seeding = !!mountInfo.seed
+
+      const drive = await this.client.drive.get({ key: mountInfo.key })
+      if (flags.seed) await drive.configureNetwork({ announce: true, lookup: true, remember: true})
+      const { network } = await drive.stats({ networkingOnly: true })
+      await drive.close()
+
+      const seeding = network.announce
 
       spinner.succeed('Mounted a drive with the following info:')
       console.log()

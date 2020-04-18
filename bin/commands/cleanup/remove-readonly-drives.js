@@ -5,9 +5,9 @@ const { Command } = require('@oclif/command')
 const { storage } = require('../../../lib/constants')
 const { HyperdriveClient } = require('../../..')
 
-class DebugClearCommand extends Command {
-  static usage = 'clear'
-  static description = 'Removes all readonly data from disk'
+class DebugRemoveReadonlyDrivesCommand extends Command {
+  static usage = 'remove-readonly-drives'
+  static description = 'Removes all readonly drives from disk'
 
   async run () {
     const self = this
@@ -33,7 +33,7 @@ class DebugClearCommand extends Command {
   }
 }
 
-module.exports = DebugClearCommand
+module.exports = DebugRemoveReadonlyDrivesCommand
 
 function rmFeed (p) {
   rm('bitfield')

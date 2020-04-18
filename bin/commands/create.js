@@ -25,9 +25,14 @@ class CreateCommand extends DaemonCommand {
     await super.run()
     const spinner = ora('Creating your new drive (if seeding, this might take a while to announce)...')
     try {
-      const { path, mountInfo } = await this.client.fuse.mount(args.path, { seed: !flags['no-seed'] })
-      const seeding = !!mountInfo.seed
+      const { path, mountInfo } = await this.client.fuse.mount(args.path)
+      const drive = await this.client.drive.get({ key: mountInfo.key })
 
+      if (!flags['no-seed']) await drive.configureNetwork({ announce: true, lookup: true, remember: true})
+      const { network } = await drive.stats({ networkingOnly: true })
+      await drive.close()
+
+      const seeding = network.announce
       spinner.succeed('Created a drive with the following info:')
       console.log()
       console.log(`  Path: ${path} `)
@@ -36,7 +41,7 @@ class CreateCommand extends DaemonCommand {
       console.log(`  Seeding: ${seeding}`)
       if (!seeding) {
         console.log()
-        console.log(`This drive is private by default. To publish it, run \`hyperdrive seed ${args.path}\``)
+        console.log(`This drive not being announced by default. To announce it on the DHT, run \`hyperdrive seed ${args.path}\``)
       }
     } catch (err) {
       spinner.fail('Could not create the drive:')
