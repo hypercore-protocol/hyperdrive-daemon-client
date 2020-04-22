@@ -61,15 +61,17 @@ class DriveWatcher extends EventEmitter {
     this.emittingStats = true
     var total = 0
     var downloaded = 0
+    var peers = 0
     for (const [path, drive] of this.drivesByPath) {
       const driveStats = await drive.stats()
       for (const { path, metadata } of driveStats.stats) {
         if (path !== '/') continue
         downloaded += metadata.downloadedBlocks
         total += metadata.totalBlocks
+        peers = metadata.peers
       }
     }
-    this.emit('stats', { total, downloaded })
+    this.emit('stats', { total, downloaded, peers })
     this.emittingStats = false
   }
 
@@ -126,10 +128,6 @@ class DownloadCommand extends DaemonCommand {
     })
   ]
   static flags = {
-    'dry-run': flags.boolean({
-      description: 'Emit all events but do not download files.',
-      default: false
-    }),
     recursive: flags.boolean({
       description: 'Recursively download drive mounts.',
       default: false
@@ -153,14 +151,14 @@ class DownloadCommand extends DaemonCommand {
     await driveWatcher.start()
 
     const progress = new cliProgress.SingleBar({
-      format: `Downloaded | {bar} | {percentage}% | {value}/{total} Metadata Blocks`
+      format: `Downloaded | {bar} | {percentage}% | {value}/{total} Metadata Blocks | {peers} Peers`
     })
     console.log(`Downloading ${args.key.toString('hex')} into ${args.dir} (ctrl+c to exit)...`)
     console.log()
     progress.start(1, 0)
     driveWatcher.on('stats', stats => {
       progress.setTotal(stats.total)
-      progress.update(stats.downloaded)
+      progress.update(stats.downloaded, { peers: stats.peers })
     })
 
     process.on('SIGINT', cleanup)
@@ -168,7 +166,6 @@ class DownloadCommand extends DaemonCommand {
 
     const remoteMirror = mirrorFolder({ fs: drive, name: '/' }, args.dir, {
       watch: driveWatcher.watch.bind(driveWatcher),
-      dryRun: flags['dry-run'],
       keepExisting: true,
       ensureParents: true
     })

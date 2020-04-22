@@ -28,12 +28,6 @@ class UploadCommand extends DaemonCommand {
       required: false
     })
   ]
-  static flags = {
-    'dry-run': flags.boolean({
-      description: 'Emit all events but do not upload files.',
-      default: false
-    })
-  }
 
   async run () {
     const { args, flags } = this.parse(UploadCommand)
@@ -63,7 +57,6 @@ class UploadCommand extends DaemonCommand {
     const localMirror = mirrorFolder(args.dir, { fs: drive, name: '/' }, {
       watch: true,
       dereference: true,
-      dryRun: flags['dry-run'],
       keepExisting: true
     })
     localMirror.on('pending', () => {
