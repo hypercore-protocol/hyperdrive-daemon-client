@@ -15,8 +15,13 @@ const { loadMetadata } = require('./lib/metadata')
 
 class MainClient {
   constructor (endpoint, token, opts = {}) {
-    this.endpoint = endpoint
-    this.token = token
+    if (typeof endpoint === 'object') {
+      opts = endpoint
+      endpoint = null
+      token = null
+    }
+    this.endpoint = endpoint || opts.endpoint
+    this.token = token || opts.token
     this.opts = opts
 
     // Set in this._ready
