@@ -113,6 +113,10 @@ class DownloadCommand extends DaemonCommand {
   static usage = 'download [key] [dir]'
   static description = 'Continuously download a Hyperdrive into a directory.'
   static args = [
+    DaemonCommand.keyArg({
+      description: 'The drive key.',
+      required: false
+    }),
     {
       name: 'dir',
       description: 'The target directory to download into.',
@@ -121,11 +125,7 @@ class DownloadCommand extends DaemonCommand {
       parse: dir => {
         return p.resolve(dir)
       }
-    },
-    DaemonCommand.keyArg({
-      description: 'The drive key.',
-      required: false
-    })
+    }
   ]
   static flags = {
     recursive: flags.boolean({
