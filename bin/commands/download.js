@@ -180,10 +180,10 @@ class DownloadCommand extends DaemonCommand {
       process.exit(0)
     }
 
-    function loadKeyFromFile () {
+    async function loadKeyFromFile () {
       const keyPath = p.join(args.dir, KEY_FILE_PATH)
       try {
-        const key = fs.readFile(keyPath)
+        const key = await fs.readFile(keyPath)
         return key
       } catch (err) {
         if (err && err.code !== 'ENOENT') throw err
