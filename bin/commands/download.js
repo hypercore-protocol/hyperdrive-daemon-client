@@ -110,7 +110,7 @@ class DriveWatcher extends EventEmitter {
 }
 
 class DownloadCommand extends DaemonCommand {
-  static usage = 'download [dir] [key]'
+  static usage = 'download [key] [dir]'
   static description = 'Continuously download a Hyperdrive into a directory.'
   static args = [
     {
@@ -153,7 +153,7 @@ class DownloadCommand extends DaemonCommand {
     const progress = new cliProgress.SingleBar({
       format: `Downloaded | {bar} | {percentage}% | {value}/{total} Metadata Blocks | {peers} Peers`
     })
-    console.log(`Downloading ${args.key.toString('hex')} into ${args.dir} (ctrl+c to exit)...`)
+    console.log(`Downloading ${key.toString('hex')} into ${args.dir} (ctrl+c to exit)...`)
     console.log()
     progress.start(1, 0)
     driveWatcher.on('stats', stats => {
