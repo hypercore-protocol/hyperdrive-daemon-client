@@ -8,11 +8,12 @@ const { flags } = require('@oclif/command')
 const DaemonCommand = require('../../lib/cli')
 const { HyperdriveClient } = require('../..')
 
-const KEY_FILE_PATH = '.hyperdrive-key'
+const IMPORT_KEY_FILE_PATH = '.hyperdrive-import-key'
+const EXPORT_KEY_FILE_PATH = '.hyperdrive-export-key'
 
-class UploadCommand extends DaemonCommand {
-  static usage = 'upload [dir] [key]'
-  static description = 'Continuously upload a directory into a Hyperdrive.'
+class ImportCommand extends DaemonCommand {
+  static usage = 'import [dir] [key]'
+  static description = 'Continuously import a directory into a Hyperdrive.'
   static args = [
     {
       name: 'dir',
@@ -30,7 +31,7 @@ class UploadCommand extends DaemonCommand {
   ]
 
   async run () {
-    const { args, flags } = this.parse(UploadCommand)
+    const { args, flags } = this.parse(ImportCommand)
     await super.run()
     var key = args.key
     var closed = false
@@ -49,17 +50,22 @@ class UploadCommand extends DaemonCommand {
     await saveKeyToFile()
 
     const progress = new cliProgress.SingleBar({
-      format: `Uploading | {bar} | {percentage}% | {value}/{total} Files`
+      format: `Importing | {bar} | {percentage}% | {value}/{total} Files`
     })
-    console.log(`Uploading ${args.dir} into ${drive.key.toString('hex')} (ctrl+c to exit)...`)
+    console.log(`Importing ${args.dir} into ${drive.key.toString('hex')} (Ctrl+c to exit)...`)
     console.log()
 
     const localMirror = mirrorFolder(args.dir, { fs: drive, name: '/' }, {
       watch: true,
       dereference: true,
-      keepExisting: true
+      keepExisting: true,
+      ignore: (file, stat, cb) => {
+        if (shouldIgnore(file)) return process.nextTick(cb, null, true)
+        return process.nextTick(cb, null, false)
+      }
     })
-    localMirror.on('pending', () => {
+    localMirror.on('pending', ({ name }) => {
+      if (shouldIgnore(name)) return
       progress.setTotal(++total)
     })
     localMirror.on('put', () => {
@@ -68,10 +74,9 @@ class UploadCommand extends DaemonCommand {
     localMirror.on('del', () => {
       progress.update(++uploaded)
     })
-    localMirror.on('ignore', () => {
-      progress.update(++uploaded)
-    })
-    localMirror.on('skip', () => {
+    localMirror.on('skip', (src, dst) => {
+      if (src && (shouldIgnore(src.name) || src.name === '/')) return
+      if (dst && (shouldIgnore(dst.name) || dst.name === '/')) return
       progress.update(++uploaded)
     })
     progress.start(1, 0)
@@ -86,7 +91,7 @@ class UploadCommand extends DaemonCommand {
     }
 
     async function loadKeyFromFile () {
-      const keyPath = p.join(args.dir, KEY_FILE_PATH)
+      const keyPath = p.join(args.dir, IMPORT_KEY_FILE_PATH)
       try {
         const key = await fs.readFile(keyPath)
         return key
@@ -97,10 +102,17 @@ class UploadCommand extends DaemonCommand {
     }
 
     function saveKeyToFile () {
-      const keyPath = p.join(args.dir, KEY_FILE_PATH)
+      const keyPath = p.join(args.dir, IMPORT_KEY_FILE_PATH)
       return fs.writeFile(keyPath, drive.key)
+    }
+
+    function shouldIgnore (name) {
+      if (!name) return true
+      if (name.indexOf(EXPORT_KEY_FILE_PATH) !== -1) return true
+      else if (name.indexOf(IMPORT_KEY_FILE_PATH) !== -1) return true
+      return false
     }
   }
 }
 
-module.exports = UploadCommand
+module.exports = ImportCommand

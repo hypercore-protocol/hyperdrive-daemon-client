@@ -12,7 +12,7 @@ const { flags } = require('@oclif/command')
 const DaemonCommand = require('../../lib/cli')
 const { HyperdriveClient } = require('../..')
 
-const KEY_FILE_PATH = '.hyperdrive-key'
+const KEY_FILE_PATH = '.hyperdrive-export-key'
 
 class DriveWatcher extends EventEmitter {
   constructor (client, drive, opts = {}) {
@@ -109,9 +109,9 @@ class DriveWatcher extends EventEmitter {
   }
 }
 
-class DownloadCommand extends DaemonCommand {
-  static usage = 'download [key] [dir]'
-  static description = 'Continuously download a Hyperdrive into a directory.'
+class ExportCommand extends DaemonCommand {
+  static usage = 'export [key] [dir]'
+  static description = 'Continuously export a Hyperdrive into a directory.'
   static args = [
     DaemonCommand.keyArg({
       description: 'The drive key.',
@@ -119,41 +119,59 @@ class DownloadCommand extends DaemonCommand {
     }),
     {
       name: 'dir',
-      description: 'The target directory to download into.',
+      description: 'The target directory to export into.',
       required: false,
-      default: process.cwd(),
       parse: dir => {
+        if (!dir) return null
         return p.resolve(dir)
       }
     }
   ]
   static flags = {
     recursive: flags.boolean({
-      description: 'Recursively download drive mounts.',
+      description: 'Recursively export drive mounts.',
       default: false
     })
   }
 
   async run () {
-    const { args, flags } = this.parse(DownloadCommand)
+    const { args, flags } = this.parse(ExportCommand)
     await super.run()
     var key = args.key
+    var dir = args.dir
+
     var total = 0
     var downloaded = 0
     var closed = false
 
-    if (!key) key = await loadKeyFromFile()
+    var loadedKey = false
+    if (!dir) {
+      // If the directory was not specified, we're in one of two cases:
+      // 1) We're in a directory that we previously downloaded into, in which case reuse that key.
+      // 2) This is a new download, in which case create a new target dir.
+      dir = process.cwd()
+      const savedKey = await loadKeyFromFile()
+      if (savedKey) {
+        loadedKey = true
+        key = key || savedKey
+      } else {
+        if (!key) throw new Error('If you are not resuming a previous download, a key must be specified.')
+        dir = p.join(dir, key.toString('hex'))
+      }
+    }
+
     const drive = await this.client.drive.get({ key })
-    await saveKeyToFile()
+    if (!loadedKey) await saveKeyToFile()
+
     const driveWatcher = new DriveWatcher(this.client, drive, {
       recursive: flags.recursive
     })
     await driveWatcher.start()
 
     const progress = new cliProgress.SingleBar({
-      format: `Downloaded | {bar} | {percentage}% | {value}/{total} Metadata Blocks | {peers} Peers`
+      format: `Exporting | {bar} | {percentage}% | {value}/{total} Metadata Blocks | {peers} Peers`
     })
-    console.log(`Downloading ${key.toString('hex')} into ${args.dir} (ctrl+c to exit)...`)
+    console.log(`Exporting ${key.toString('hex')} into ${dir} (Ctrl+c to exit)...`)
     console.log()
     progress.start(1, 0)
     driveWatcher.on('stats', stats => {
@@ -164,7 +182,7 @@ class DownloadCommand extends DaemonCommand {
     process.on('SIGINT', cleanup)
     process.on('SIGTERM', cleanup)
 
-    const remoteMirror = mirrorFolder({ fs: drive, name: '/' }, args.dir, {
+    const remoteMirror = mirrorFolder({ fs: drive, name: '/' }, dir, {
       watch: driveWatcher.watch.bind(driveWatcher),
       keepExisting: true,
       ensureParents: true
@@ -181,7 +199,7 @@ class DownloadCommand extends DaemonCommand {
     }
 
     async function loadKeyFromFile () {
-      const keyPath = p.join(args.dir, KEY_FILE_PATH)
+      const keyPath = p.join(dir, KEY_FILE_PATH)
       try {
         const key = await fs.readFile(keyPath)
         return key
@@ -191,11 +209,12 @@ class DownloadCommand extends DaemonCommand {
       }
     }
 
-    function saveKeyToFile () {
-      const keyPath = p.join(args.dir, KEY_FILE_PATH)
+    async function saveKeyToFile () {
+      const keyPath = p.join(dir, KEY_FILE_PATH)
+      await fs.mkdir(dir, { recursive: true })
       return fs.writeFile(keyPath, drive.key)
     }
   }
 }
 
-module.exports = DownloadCommand
+module.exports = ExportCommand

@@ -68,6 +68,9 @@
     "topics": {
       "debug": {
         "description": "Assorted debugging commands"
+      },
+      "cleanup": {
+        "description": "Commands for deleting drives and clearing disk space"
       }
     }
   }

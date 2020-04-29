@@ -1,4 +1,3 @@
-const repl = require('repl')
 const grpc = require('@grpc/grpc-js')
 const maybe = require('call-me-maybe')
 const { version: apiVersion } = require('hyperdrive-schemas')
