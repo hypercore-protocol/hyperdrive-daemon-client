@@ -64,11 +64,11 @@ class DriveWatcher extends EventEmitter {
     var peers = 0
     for (const [path, drive] of this.drivesByPath) {
       const driveStats = await drive.stats()
-      for (const { path, metadata } of driveStats.stats) {
-        if (path !== '/') continue
-        downloaded += metadata.downloadedBlocks
-        total += metadata.totalBlocks
-        peers = metadata.peers
+      for (const { path, content } of driveStats.stats) {
+        if (path !== '/' || !content) continue
+        downloaded += content.downloadedBlocks
+        total += content.totalBlocks
+        peers = content.peers
       }
     }
     this.emit('stats', { total, downloaded, peers })
@@ -169,7 +169,7 @@ class ExportCommand extends DaemonCommand {
     await driveWatcher.start()
 
     const progress = new cliProgress.SingleBar({
-      format: `Exporting | {bar} | {percentage}% | {value}/{total} Metadata Blocks | {peers} Peers`
+      format: `Exporting | {bar} | {percentage}% | {value}/{total} Content Blocks | {peers} Peers`
     })
     console.log(`Exporting ${key.toString('hex')} into ${dir} (Ctrl+c to exit)...`)
     console.log()
