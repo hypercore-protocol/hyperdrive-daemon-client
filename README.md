@@ -25,7 +25,9 @@ The client exposes a gRPC interface for a) creating and interacting with remote 
 Check out the [daemon tests](https://github.com/andrewosh/hyperdrive-daemon/blob/hyperdrive-api/test/hyperdrive.js) for more example usage.
 
 ### Hyperdrive
-The client's Hyperdrive API is designed to mirror the methods in Hyperdrive as closely as possible. 
+The client's Hyperdrive API is designed to mirror the methods in Hyperdrive as closely as possible.
+
+All drive commands can be found through the `client.drives` object.
 
 #### General Operations
 Operations to manage sessions or get more general information about the state of the daemon.
@@ -101,7 +103,9 @@ Method arguments take the same form as those in Hyperdrive. The following method
 20. `drive.checkout(version)` // Returns a new `RemoteHyperdrive` instance for the checkout.
 
 ### FUSE
-The client library also provides programmatic access to the daemon's FUSE interface. You can mount/unmount your root drive, or mount and share subdrives:
+The client library also provides programmatic access to the daemon's FUSE interface.
+
+All FUSE commands can be found on the `client.fuse` object.
 
 ##### `client.fuse.mount(mnt, opts, cb)`
 Mount either the root drive (if `/mnt` is not specified), or a subdirectory within the root drive.
@@ -112,10 +116,66 @@ Mount either the root drive (if `/mnt` is not specified), or a subdirectory with
 Unmounts either a subdrive, or the root drive if `mnt` is not specified.
 
 ##### `client.fuse.publish(path, cb)`
-Advertise the drive mounted at `path` to the network.
+Advertise the drive mounted at `path` to the swarm.
 
 ##### `client.fuse.unpublish(path, cb)`
-Stop advertisingthe drive mounted at `path` to the network.
+Stop advertising the drive mounted at `path` to the swarm.
+
+### Peersockets
+`client.peersockets` lets your directly exchange messages with connected peers. You can discover all peers swarming a given discovery key using the peers API (`client.peers`) described below.
+
+Peers are all identified by aliases in order to reduce bandwidth consumtion, as the alternative is to attach NOISE keys to every message. Aliases can be mapped to/from NOISE keys through the `client.peers` API.
+
+##### `const topicHandle = client.peersockets.join(topicName, { onmessage })`
+- `topicName`: A String
+- `onmessage`: A function of the form `(alias, msg) => { ... }`
+Create a TopicHandle for sending/receiving messages on topic `topicName`.
+
+##### `topicHandle.send(alias, msg)`
+- `alias`: A numeric peer alias
+- `msg`: A Buffer
+
+Attempt to send a message on the handle's topic to the given peer. 
+
+This message will be delivered with best-effort, but if the remote peer is not subscribed to the topic the message will silently be discarded.
+
+##### `topicHandle.on('close', ...)`
+Emitted when the topic stream has closed.
+
+You can check out the internals in the [peersockets repo](https://github.com/andrewosh/peersockets).
+
+### Peers
+`client.peers` allows you to get information about currently-connected peers.
+
+##### `const peerList = await client.peers.listPeers([discoveryKey])`
+- `discoveryKey`: A Buffer
+
+Get the list of connected peers either globally or swarming a specific discovery key.
+
+`peerList` has the form:
+```js
+[
+  {
+    noiseKey: 0x123...
+    address: '10.21...`,
+    type: 'utp'|'tcp'
+  },
+  ...
+]
+```
+
+##### `const destroy = client.peers.watchPeers([discoveryKey], { onjoin, onleave })`
+- `discoveryKey`: A Buffer
+
+Watch for peers joining or leaving either globally or for a specific discovery key.
+
+`onjoin` and `onleave` both take a single `peer` argument with `{ noiseKey, address, type }` fields.
+
+##### `const alias = await client.peers.getAlias(key)`
+Gets or creates a numeric alias for the given NOISE `key`.
+
+##### `const key = await client.peers.getKey(alias)`
+Returns the NOISE `key` for a previously-assigned `alias`.
 
 ## License
 MIT
