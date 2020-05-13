@@ -49,14 +49,14 @@
     "last-one-wins": "^1.0.4",
     "mirror-folder": "^3.0.1",
     "ora": "^4.0.3",
+    "protocol-buffers-encodings": "^1.1.0",
     "pumpify": "^2.0.0",
     "stream-collector": "^1.0.1",
     "streamx": "^2.6.0",
     "through2-map": "^3.0.0"
   },
   "devDependencies": {
-    "grpc-tools": "^1.7.3",
-    "protocol-buffers-encodings": "^1.1.0"
+    "grpc-tools": "^1.7.3"
   },
   "oclif": {
     "commands": "./bin/commands",
