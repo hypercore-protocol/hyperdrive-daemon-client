@@ -45,7 +45,7 @@
     "fs-extra": "^8.0.1",
     "globby": "^11.0.0",
     "google-protobuf": "^3.8.0",
-    "hyperdrive-schemas": "beta",
+    "hyperdrive-schemas": "^1.9.0",
     "last-one-wins": "^1.0.4",
     "mirror-folder": "^3.0.1",
     "ora": "^4.0.3",
