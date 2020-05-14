@@ -42,6 +42,7 @@
     "cli-progress": "^3.4.0",
     "codecs": "^2.0.0",
     "dat-encoding": "^5.0.1",
+    "globby": "^11.0.0",
     "google-protobuf": "^3.8.0",
     "hyperdrive-schemas": "^1.9.0",
     "last-one-wins": "^1.0.4",
