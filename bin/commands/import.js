@@ -43,6 +43,7 @@ class ImportCommand extends DaemonCommand {
 
     if (!key) key = await loadKeyFromFile()
     const drive = await this.client.drive.get({ key })
+    await drive.configureNetwork({ lookup: true, announce: true, remember: true })
     if (!drive.writable) {
       console.error('The target drive is not writable!')
       return process.exit(1)
