@@ -59,7 +59,8 @@ class ImportCommand extends DaemonCommand {
     const localMirror = mirrorFolder(args.dir, { fs: drive, name: '/' }, {
       watch: true,
       dereference: true,
-      keepExisting: true,
+      // When going from fs -> drive, it should overwrite.
+      keepExisting: false,
       ignore: (file, stat, cb) => {
         if (shouldIgnore(file)) return process.nextTick(cb, null, true)
         return process.nextTick(cb, null, false)
