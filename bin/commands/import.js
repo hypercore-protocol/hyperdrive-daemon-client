@@ -29,6 +29,12 @@ class ImportCommand extends DaemonCommand {
       required: false
     })
   ]
+  static flags = {
+    'no-seed': flags.boolean({
+      description: 'Do not seed the new drive on the Hyperdrive network',
+      default: false
+    })
+  }
 
   async run () {
     const { args, flags } = this.parse(ImportCommand)
@@ -43,7 +49,9 @@ class ImportCommand extends DaemonCommand {
 
     if (!key) key = await loadKeyFromFile()
     const drive = await this.client.drive.get({ key })
-    await drive.configureNetwork({ lookup: true, announce: true, remember: true })
+    if (!flags['no-seed']) {
+      await drive.configureNetwork({ lookup: true, announce: true, remember: true })
+    }
     if (!drive.writable) {
       console.error('The target drive is not writable!')
       return process.exit(1)

@@ -105,6 +105,16 @@ class MainClient {
     }))
   }
 
+  refreshFuse (cb) {
+    const req = new messages.FuseRefreshRequest()
+    return maybe(cb, new Promise((resolve, reject) => {
+      this._client.refreshFuse(req, toMetadata({ token: this.token }), (err, rsp) => {
+        if (err) return reject(err)
+        return resolve()
+      })
+    }))
+  }
+
   close () {
     if (this.fuse) this.fuse.closeClient()
     if (this.drive) this.drive.closeClient()
