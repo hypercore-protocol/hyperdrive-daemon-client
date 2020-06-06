@@ -52,8 +52,7 @@
     "pump": "^3.0.0",
     "pumpify": "^2.0.0",
     "stream-collector": "^1.0.1",
-    "streamx": "^2.6.0",
-    "through2-map": "^3.0.0"
+    "streamx": "^2.6.0"
   },
   "devDependencies": {
     "grpc-tools": "^1.8.1"
