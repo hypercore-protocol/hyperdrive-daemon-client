@@ -44,6 +44,7 @@ class CreateCommand extends DaemonCommand {
         console.log(`This drive not being announced by default. To announce it on the DHT, run \`hyperdrive seed ${args.path}\``)
       }
     } catch (err) {
+      console.log('ERR:', err)
       spinner.fail('Could not create the drive:')
       console.error(`${err.details || err}`)
       this.exit(1)
