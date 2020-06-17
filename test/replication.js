@@ -132,15 +132,15 @@ test('can cancel an active download', async t => {
 
     const drive2 = await secondClient.drive.get({ key: drive1.key })
 
-    await writeFile(drive1, '/a/1', 1000)
-    await writeFile(drive1, '/a/2', 1000)
+    await writeFile(drive1, '/a/1', 40)
+    await writeFile(drive1, '/a/2', 40)
 
     var fileStats = await drive2.fileStats('/a/1')
     // TODO: Uncomment after hypercore bug fix
     // t.same(fileStats.downloadedBlocks, 0)
 
     const handle = await drive2.download('a')
-    await delay(10)
+    await delay(20)
     await handle.destroy()
 
     // Wait to make sure that the download is not continuing.
@@ -148,6 +148,7 @@ test('can cancel an active download', async t => {
 
     const { stats: totals } = await drive2.stats()
     fileStats = await drive2.fileStats('a')
+    console.log('fileStats:', fileStats)
     const contentTotals = totals[0].content
     t.true(contentTotals.downloadedBlocks < 2000 && contentTotals.downloadedBlocks > 0)
     t.true(fileStats.get('/a/1').downloadedBlocks < 1000 && fileStats.get('/a/1').downloadedBlocks > 0)

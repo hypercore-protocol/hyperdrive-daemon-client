@@ -28,6 +28,10 @@ class HyperdriveClient extends Nanoresource {
     this.drive = new DriveClient(this._client)
   }
 
+  ready (cb) {
+    return this.open(cb)
+  }
+
   async _open () {
     return this._client.ready()
     // this.fuse = new FuseClient(this._client)
@@ -43,7 +47,6 @@ class HyperdriveClient extends Nanoresource {
   status (cb) {
     // TODO: Add top-level status method to hyperspace.
     return process.nextTick(cb, null)
-    return this._client.status(cb)
   }
 }
 
