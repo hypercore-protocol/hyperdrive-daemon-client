@@ -37,7 +37,7 @@
     "globby": "^11.0.0",
     "hyperdrive": "git@github.com:hypercore-protocol/hyperdrive#hyperspace-port",
     "hyperdrive-schemas": "^1.9.0",
-    "hyperspace": "git@github.com:andrewosh/hyperspace",
+    "hyperspace": "^3.0.0",
     "last-one-wins": "^1.0.4",
     "mirror-folder": "^3.0.1",
     "nanoresource-promise": "^1.2.2",
