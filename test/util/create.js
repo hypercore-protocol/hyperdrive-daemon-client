@@ -7,7 +7,7 @@ async function create (numServers, opts) {
   const driveClients = clients.map(c => {
     return new HyperdriveClient({ client: c })
   })
-  return { clients: driveClients, daemons, cleanup, dirs }
+  return { hsClients: clients, clients: driveClients, daemons, cleanup, dirs }
 }
 
 async function createOne (opts) {

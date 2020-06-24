@@ -132,8 +132,8 @@ test('can cancel an active download', async t => {
 
     const drive2 = await secondClient.drive.get({ key: drive1.key })
 
-    await writeFile(drive1, '/a/1', 40)
-    await writeFile(drive1, '/a/2', 40)
+    await writeFile(drive1, '/a/1', 10)
+    await writeFile(drive1, '/a/2', 10)
 
     var fileStats = await drive2.fileStats('/a/1')
     // TODO: Uncomment after hypercore bug fix

@@ -3,16 +3,11 @@
   "version": "2.0.0",
   "description": "A client library and CLI tool for interacting with the Hyperdrive daemon.",
   "main": "index.js",
-  "bin": {
-    "hyperdrive": "./bin/run/run"
-  },
   "scripts": {
     "test": "tape test/index.js"
   },
   "files": [
     "index.js",
-    "bin/",
-    "scripts/",
     "lib/"
   ],
   "repository": {
@@ -31,7 +26,6 @@
   },
   "homepage": "https://github.com/hypercore-protocol/hyperdrive-daemon-client#readme",
   "dependencies": {
-    "@geut/hyperdrive-promise": "^3.0.1",
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.14.0",
     "@oclif/errors": "^1.2.2",
@@ -41,7 +35,7 @@
     "cli-progress": "^3.4.0",
     "codecs": "^2.0.0",
     "globby": "^11.0.0",
-    "hyperdrive": "^10.13.0",
+    "hyperdrive": "git@github.com:hypercore-protocol/hyperdrive#hyperspace-port",
     "hyperdrive-schemas": "^1.9.0",
     "hyperspace": "git@github.com:andrewosh/hyperspace",
     "last-one-wins": "^1.0.4",
