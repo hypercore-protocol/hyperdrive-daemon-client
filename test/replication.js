@@ -148,7 +148,6 @@ test('can cancel an active download', async t => {
 
     const { stats: totals } = await drive2.stats()
     fileStats = await drive2.fileStats('a')
-    console.log('fileStats:', fileStats)
     const contentTotals = totals[0].content
     t.true(contentTotals.downloadedBlocks < 2000 && contentTotals.downloadedBlocks > 0)
     t.true(fileStats.get('/a/1').downloadedBlocks < 1000 && fileStats.get('/a/1').downloadedBlocks > 0)
@@ -175,7 +174,6 @@ test('can cancel an active download', async t => {
 
 test('can replicate many mounted drives between daemons', async t => {
   const { clients, cleanup } = await create(2)
-  console.time('many-mounts')
   const firstClient = clients[0]
   const secondClient = clients[1]
 
@@ -190,7 +188,6 @@ test('can replicate many mounted drives between daemons', async t => {
   }
 
   await cleanup()
-  console.timeEnd('many-mounts')
   t.end()
 
   async function createFirst () {
@@ -438,9 +435,7 @@ test('deep mounts with added latency', async t => {
     let path = ''
     for (let i = 0; i < DEPTH; i++) {
       const component = '' + i
-      console.time('readdir')
       const dirContents = await secondRoot.readdir(path)
-      console.timeEnd('readdir')
       t.same(dirContents.length, 2)
       path = p.join(path, component)
     }

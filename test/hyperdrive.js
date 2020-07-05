@@ -421,9 +421,7 @@ test.skip('can create a diff stream on a remote hyperdrive', async t => {
       { type: 'mount', name: 'd2', key: drive2.key }
     ])
 
-    console.log('AFTER VALIDATIONS')
     await new Promise(resolve => setTimeout(resolve, 500))
-    console.log('CLOSING DRIVES')
 
     await drive1.close()
     await drive2.close()
@@ -432,7 +430,6 @@ test.skip('can create a diff stream on a remote hyperdrive', async t => {
   }
 
   await new Promise(resolve => setTimeout(resolve, 1000))
-  console.log('CLEANING UP')
   await cleanup()
   t.end()
 
@@ -444,11 +441,9 @@ test.skip('can create a diff stream on a remote hyperdrive', async t => {
         return resolve()
       })
       stream.on('error', err => {
-        console.log('STREAM ERROR:', err)
         t.fail(err)
       })
       stream.on('data', ({ type, name, value }) => {
-        console.log('value:', value, 'type:', type, 'name:', name)
         t.same(name, expected[seen].name)
         t.same(type, expected[seen].type)
         if (type === 'mount') t.same(value.mount.key, expected[seen].key)
@@ -773,7 +768,6 @@ test('many quick closes/reopens', async t => {
     for (let i = 0; i < NUM_CYCLES; i++) {
       var drive = await client.drive.get({ key: driveKey })
       if (!driveKey) driveKey = drive.key
-      console.log('writing to drive:', drive.metadata)
       await drive.writeFile(expected[i], expected[i])
     }
     drive = await client.drive.get({ key: driveKey })
@@ -926,7 +920,6 @@ test('can get all network configurations', async t => {
       driveConfigs.set(drive.discoveryKey.toString('hex'), expectedConfig)
     }
     const configMap = await client.drive.allNetworkConfigurations()
-    console.log('configMap:', configMap)
     for (const [key, config] of configMap) {
       const expectedDriveConfig = driveConfigs.get(key)
       if (!expectedDriveConfig) {
