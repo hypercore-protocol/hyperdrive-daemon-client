@@ -1,7 +1,7 @@
 # hyperdrive-daemon-client
 
 ## ⚠️ Soft Deprecation Notice ⚠️
-__With the introduction of [`hyperspace`](https://github.com/hyperspace-org/hyperspace), this module is "soft deprecated".__
+__With the introduction of [`hyperspace`](https://github.com/hyperspace-org/hyperspace), this module is "soft deprecated," meaning the current compat release (v2) will likely be the last.__
 
 __If you're a new user, it's recommended to use [`hyperdrive`](https://github.com/hypercore-protocol/hyperdrive) directly, using a `RemoteCorestore` instance connected to Hyperspace. Check out the Hyperspace docs for examples.__
 
