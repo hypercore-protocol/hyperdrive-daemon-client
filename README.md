@@ -1,5 +1,5 @@
 # hyperdrive-daemon-client
-__Note: With the introduction of hyperspace, this module is "soft deprecated".__
+__Note: With the introduction of [`hyperspace`](https://github.com/hyperspace-org/hyperspace), this module is "soft deprecated".__
 
 __The most recent update (v2) works with Hyperspace, and is designed to replicate the v1 functionality with minimal breaking changes. See [`UPGRADE.md`]() for more info.__
 
