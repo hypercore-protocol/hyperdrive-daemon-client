@@ -1,4 +1,8 @@
 # hyperdrive-daemon-client
+__Note: With the introduction of hyperspace, this module is "soft deprecated".__
+
+__The most recent update (v2) works with Hyperspace, and is designed to replicate the v1 functionality with minimal breaking changes. See [`UPGRADE.md`]() for more info.__
+
 A Node client library and CLI tool for interacting with the Hyperdrive daemon.
 
 Implements the RPC methods defined in the [`hyperdrive-schemas`](https://github.com/andrewosh/hyperdrive-schemas) repo.
