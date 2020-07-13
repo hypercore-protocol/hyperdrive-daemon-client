@@ -379,10 +379,13 @@ test('published drives are swarmed by both reader and writer', async t => {
 
     // The group owner announces the group.
     await group.configureNetwork({ announce: true, lookup: true })
+
     await delay(100)
 
     await group.mount('profile', { key: profile.key })
     await profile.mount('service', { key: service.key })
+
+    await delay(100)
 
     const reader = await groupReader.drive.get({ key: group.key })
 
