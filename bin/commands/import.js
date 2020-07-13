@@ -2,14 +2,14 @@ const fs = require('fs').promises
 const p = require('path')
 
 const cliProgress = require('cli-progress')
-const mirrorFolder = require('mirror-folder')
 const { flags } = require('@oclif/command')
 
 const DaemonCommand = require('../../lib/cli')
-const { HyperdriveClient } = require('../..')
 
-const IMPORT_KEY_FILE_PATH = '.hyperdrive-import-key'
-const EXPORT_KEY_FILE_PATH = '.hyperdrive-export-key'
+const {
+  importKeyFilePath: IMPORT_KEY_FILE_PATH,
+  exportKeyFilePath: EXPORT_KEY_FILE_PATH
+} = require('../../lib/constants')
 
 class ImportCommand extends DaemonCommand {
   static usage = 'import [dir] [key]'
@@ -64,16 +64,8 @@ class ImportCommand extends DaemonCommand {
     console.log(`Importing ${args.dir} into ${drive.key.toString('hex')} (Ctrl+c to exit)...`)
     console.log()
 
-    const localMirror = mirrorFolder(args.dir, { fs: drive, name: '/' }, {
-      watch: true,
-      dereference: true,
-      // When going from fs -> drive, it should overwrite.
-      keepExisting: false,
-      ignore: (file, stat, cb) => {
-        if (shouldIgnore(file)) return process.nextTick(cb, null, true)
-        return process.nextTick(cb, null, false)
-      }
-    })
+    const localMirror = this.client.drive.import(args.dir, drive)
+
     localMirror.on('pending', ({ name }) => {
       if (shouldIgnore(name)) return
       progress.setTotal(++total)
@@ -116,12 +108,7 @@ class ImportCommand extends DaemonCommand {
       return fs.writeFile(keyPath, drive.key)
     }
 
-    function shouldIgnore (name) {
-      if (!name) return true
-      if (name.indexOf(EXPORT_KEY_FILE_PATH) !== -1) return true
-      else if (name.indexOf(IMPORT_KEY_FILE_PATH) !== -1) return true
-      return false
-    }
+
   }
 }
 
