@@ -206,7 +206,8 @@ test('peersockets, send to all peers swarming a drive, static peers', async t =>
   const { clients, hsClients, cleanup } = await create(NUM_PEERS)
   const firstClient = clients[0]
   const firstRemoteKey = hsClients[0].network.keyPair.publicKey
-  const sharedCore = hsClients[0].corestore.get()
+  const store = hsClients[0].corestore()
+  const sharedCore = store.get()
   await sharedCore.ready()
 
   await hsClients[0].network.configure(sharedCore.discoveryKey, { announce: true, lookup: true })
@@ -233,7 +234,8 @@ test('peersockets, send to all peers swarming a drive, static peers', async t =>
 
     // Each receiver peers swarms the shared core and joins the topic.
     for (let i = 1; i < NUM_PEERS; i++) {
-      const core = hsClients[i].corestore.get(sharedCore.key)
+      const store = hsClients[i].corestore()
+      const core = store.get(sharedCore.key)
       await core.ready()
       await hsClients[i].network.configure(sharedCore.discoveryKey, { announce: false, lookup: true })
       receiverTopics.push(clients[i].peersockets.join('my-topic', {
@@ -284,7 +286,8 @@ test('peersockets, send to all peers swarming a drive, dynamically-added peers',
   const firstMessage = Buffer.from('hello world')
 
   try {
-    const sharedCore = await hsClients[0].corestore.get()
+    const store = hsClients[0].corestore()
+    const sharedCore = store.get()
     await sharedCore.ready()
     await hsClients[0].network.configure(sharedCore.key, { announce: true, lookup: true })
     const receivers = []
@@ -307,7 +310,8 @@ test('peersockets, send to all peers swarming a drive, dynamically-added peers',
     // Each receiver peers swarms the drive and joins the topic.
     // Wait between each peer creation to test dynamic joins.
     for (let i = 1; i < NUM_PEERS; i++) {
-      const core = hsClients[i].corestore.get(sharedCore.key)
+      const store = hsClients[i].corestore()
+      const core = store.get(sharedCore.key)
       await hsClients[i].network.configure(sharedCore.key, { announce: false, lookup: true })
       receiverTopics.push(clients[i].peersockets.join('my-topic', {
         onmessage: async (msg, peer) => {
