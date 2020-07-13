@@ -1,4 +1,7 @@
-# hyperdrive-daemon-client
+# `hyperdrive-daemon-client`
+[![Build Status](https://travis-ci.com/hypercore-protocol/hyperdrive-daemon-client.svg?branch=hyperspace-port)](https://travis-ci.com/hypercore-protocol/hyperdrive-daemon-client)
+
+> A Node client library and CLI tool for interacting with the Hyperdrive daemon.
 
 ## ⚠️ Soft Deprecation Notice ⚠️
 __With the introduction of [`hyperspace`](https://github.com/hyperspace-org/hyperspace), this module is "soft deprecated," meaning the current compat release (v2) will likely be the last.__
@@ -6,12 +9,6 @@ __With the introduction of [`hyperspace`](https://github.com/hyperspace-org/hype
 __If you're a new user, it's recommended to use [`hyperdrive`](https://github.com/hypercore-protocol/hyperdrive) directly, using a `RemoteCorestore` instance connected to Hyperspace. Check out the Hyperspace docs for examples.__
 
 __For existing users, the most recent update (v2) works with Hyperspace, and is designed to replicate the v1 functionality with minimal breaking changes. See [`UPGRADE.md`]() for more info.__
-
----
-
-A Node client library and CLI tool for interacting with the Hyperdrive daemon.
-
-Implements the RPC methods defined in the [`hyperdrive-schemas`](https://github.com/andrewosh/hyperdrive-schemas) repo.
 
 ## Installation
 `npm i hyperdrive-daemon-client --save`
