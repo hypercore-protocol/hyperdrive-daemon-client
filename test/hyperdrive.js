@@ -3,7 +3,6 @@ const test = require('tape')
 const collectStream = require('stream-collector')
 const { createOne } = require('./util/create')
 
-
 test('can write/read a file from a remote hyperdrive', async t => {
   const { client, cleanup } = await createOne()
 
@@ -184,9 +183,9 @@ test('assorted read parameters to createReadStream', async t => {
     const drive = await client.drive.get()
     t.true(drive.key)
 
-    let blocks = ['hello', 'hello', 'world', 'world']
-    let complete = blocks.join('')
-    let tests = [
+    const blocks = ['hello', 'hello', 'world', 'world']
+    const complete = blocks.join('')
+    const tests = [
       {
         params: {},
         value: complete
@@ -210,7 +209,7 @@ test('assorted read parameters to createReadStream', async t => {
     ]
 
     const writeStream = drive.createWriteStream('hello', { uid: 999, gid: 999 })
-    for (let block of blocks) {
+    for (const block of blocks) {
       writeStream.write(block)
     }
     writeStream.end()
@@ -220,7 +219,7 @@ test('assorted read parameters to createReadStream', async t => {
       writeStream.on('finish', resolve)
     })
 
-    for (let { params, value } of tests) {
+    for (const { params, value } of tests) {
       const readStream = await drive.createReadStream('hello', params)
       const content = await new Promise((resolve, reject) => {
         collectStream(readStream, (err, bufs) => {
@@ -455,8 +454,6 @@ test.skip('can create a diff stream on a remote hyperdrive', async t => {
 
 test('can read/write multiple remote hyperdrives on one server', async t => {
   const { client, cleanup } = await createOne()
-  var startingId = 1
-
   const files = [
     ['hello', 'world'],
     ['goodbye', 'dog'],
@@ -731,7 +728,7 @@ test.skip('drives are closed when all corresponding sessions are closed', async 
 
 // This test is no longer relevant.
 test.skip('reopening a drive after previously closed works', async t => {
-  const { client, cleanup, daemon } = await createOne()
+  const { client, cleanup } = await createOne()
 
   try {
     var drive = await client.drive.get()
@@ -760,7 +757,7 @@ test.skip('reopening a drive after previously closed works', async t => {
 
 test('many quick closes/reopens', async t => {
   const NUM_CYCLES = 5
-  const { client, cleanup, daemon } = await createOne()
+  const { client, cleanup } = await createOne()
   var driveKey = null
   const expected = new Array(NUM_CYCLES).fill(0).map((_, i) => '' + i)
 

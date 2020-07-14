@@ -43,7 +43,6 @@ test('can get drive stats containing only networking info', async t => {
 
     // 100 ms delay for replication.
     await delay(100)
-    const contents = await drive2.readFile('hello')
 
     const { stats: stats1 } = await drive1.stats({ networkingOnly: true })
     const { stats: stats2 } = await drive2.stats({ networkingOnly: true })

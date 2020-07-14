@@ -7,7 +7,6 @@ test('peersockets, unidirectional send one', async t => {
   const firstClient = clients[0]
   const secondClient = clients[1]
 
-  const firstKey = hsClients[0].network.keyPair.publicKey
   const secondKey = hsClients[1].network.keyPair.publicKey
   let received = false
 
@@ -50,7 +49,6 @@ test('peersockets, unidirectional send many', async t => {
   const firstClient = clients[0]
   const secondClient = clients[1]
 
-  const firstKey = hsClients[0].network.keyPair.publicKey
   const secondKey = hsClients[1].network.keyPair.publicKey
   const sharedKey = hypercoreCrypto.randomBytes(32)
 
@@ -311,7 +309,7 @@ test('peersockets, send to all peers swarming a drive, dynamically-added peers',
     // Wait between each peer creation to test dynamic joins.
     for (let i = 1; i < NUM_PEERS; i++) {
       const store = hsClients[i].corestore()
-      const core = store.get(sharedCore.key)
+      store.get(sharedCore.key)
       await hsClients[i].network.configure(sharedCore.key, { announce: false, lookup: true })
       receiverTopics.push(clients[i].peersockets.join('my-topic', {
         onmessage: async (msg, peer) => {
@@ -346,7 +344,6 @@ test.skip('closing the last topic handle closes the topic', async t => {
   const secondClient = clients[1]
 
   const firstPeersockets = clients[0].peersockets
-  const firstKey = hsClients[0].network.keyPair.publicKey
   const secondKey = hsClients[1].network.keyPair.publicKey
   let received = false
 

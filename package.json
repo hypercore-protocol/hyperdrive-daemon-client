@@ -4,7 +4,7 @@
   "description": "A client library and CLI tool for interacting with the Hyperdrive daemon.",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/index.js"
+    "test": "standard && tape test/index.js"
   },
   "files": [
     "index.js",
@@ -26,15 +26,9 @@
   },
   "homepage": "https://github.com/hypercore-protocol/hyperdrive-daemon-client#readme",
   "dependencies": {
-    "@oclif/command": "^1.5.19",
-    "@oclif/config": "^1.14.0",
-    "@oclif/errors": "^1.2.2",
-    "@oclif/plugin-autocomplete": "^0.1.5",
-    "@oclif/plugin-help": "^2.2.3",
     "call-me-maybe": "^1.0.1",
     "cli-progress": "^3.4.0",
     "codecs": "^2.0.0",
-    "globby": "^11.0.0",
     "hyperdrive": "^10.14.1",
     "hyperdrive-schemas": "^2.0.0",
     "hyperspace": "^3.5.1",
@@ -49,23 +43,8 @@
     "streamx": "^2.6.0",
     "tmp-promise": "^3.0.2"
   },
-  "oclif": {
-    "commands": "./bin/commands",
-    "bin": "hyperdrive",
-    "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-autocomplete"
-    ],
-    "topics": {
-      "debug": {
-        "description": "Assorted debugging commands"
-      },
-      "cleanup": {
-        "description": "Commands for deleting drives and clearing disk space"
-      }
-    }
-  },
   "devDependencies": {
+    "standard": "^14.3.4",
     "tape": "^5.0.1"
   }
 }

@@ -1,5 +1,3 @@
-const maybe = require('call-me-maybe')
-
 const { NanoresourcePromise: Nanoresource } = require('nanoresource-promise/emitter')
 const HyperspaceClient = require('hyperspace/client')
 const Peersockets = require('peersockets')
