@@ -31,7 +31,7 @@
     "codecs": "^2.0.0",
     "hyperdrive": "^10.14.1",
     "hyperdrive-schemas": "^2.0.0",
-    "hyperspace": "^3.5.1",
+    "hyperspace": "^3.6.0",
     "last-one-wins": "^1.0.4",
     "mirror-folder": "^3.0.1",
     "nanoresource-promise": "^1.2.2",
