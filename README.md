@@ -8,7 +8,7 @@ __With the introduction of [`hyperspace`](https://github.com/hyperspace-org/hype
 
 __If you're a new user, it's recommended to use [`hyperdrive`](https://github.com/hypercore-protocol/hyperdrive) directly, using a `RemoteCorestore` instance connected to Hyperspace. Check out the Hyperspace docs for examples.__
 
-__For existing users, the most recent update (v2) works with Hyperspace, and is designed to replicate the v1 functionality with minimal breaking changes. See [`UPGRADE.md`]() for more info.__
+__For existing users, the most recent update (v2) works with Hyperspace, and is designed to replicate the v1 functionality with minimal breaking changes. See [`UPGRADE.md`](https://github.com/hypercore-protocol/hyperdrive-daemon-client/blob/master/UPGRADE.md) for more info.__
 
 ## Installation
 `npm i hyperdrive-daemon-client --save`
