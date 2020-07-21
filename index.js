@@ -33,8 +33,7 @@ class HyperdriveClient extends Nanoresource {
   }
 
   status (cb) {
-    // TODO: Add top-level status method to hyperspace.
-    return process.nextTick(cb, null)
+    return this._client.status(cb)
   }
 }
 
