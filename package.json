@@ -30,6 +30,7 @@
     "cli-progress": "^3.4.0",
     "codecs": "^2.0.0",
     "hyperdrive": "^10.14.1",
+    "hyperdrive-network-heuristics": "^1.0.2",
     "hyperdrive-schemas": "^2.0.0",
     "hyperspace": "^3.6.0",
     "last-one-wins": "^1.0.4",
