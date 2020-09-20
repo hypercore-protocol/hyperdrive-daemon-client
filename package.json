@@ -1,6 +1,6 @@
 {
   "name": "hyperdrive-daemon-client",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A client library and CLI tool for interacting with the Hyperdrive daemon.",
   "main": "index.js",
   "scripts": {
